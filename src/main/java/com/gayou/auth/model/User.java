@@ -1,10 +1,8 @@
 package com.gayou.auth.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Getter
@@ -14,6 +12,14 @@ public class User {
     @GeneratedValue
     private Long id;
 
+    @NotBlank
+    @Size(min = 2, max = 30)
     private String username;
+
+    @NotBlank
+    @Size(min = 6, max = 100)
     private String password;
+
+    @Email(message = "Email should be valid")
+    private String email;
 }
