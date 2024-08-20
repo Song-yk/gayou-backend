@@ -7,6 +7,7 @@ import jakarta.validation.constraints.*;
 @Entity
 @Getter
 @Setter
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue
