@@ -21,6 +21,7 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+
     @PostMapping("/user")
     public ResponseEntity<User> createUser(@Valid @RequestBody User newUser) {
         User user = userRepository.save(newUser);
