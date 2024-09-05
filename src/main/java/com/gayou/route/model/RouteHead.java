@@ -1,33 +1,42 @@
 package com.gayou.route.model;
 
 import jakarta.persistence.*;
-import lombok.*;
 import jakarta.validation.constraints.*;
+import lombok.*;
+
+import java.util.Date;
+import java.util.List;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import com.gayou.auth.model.User;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "route_head")
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class RouteHead {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    private Long user_id;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @NotBlank
     private String town;
 
     @NotBlank
-    private String course_name;
+    private String courseName;
 
-    @NotBlank
-    private Long tot_distance;
+    private Long totDistance;
 
-    @NotBlank
-    private String create_date;
+    @CreatedDate
+    private Date createDate;
 
-    @NotBlank
-    private String update_date;
+    @LastModifiedDate
+    private Date updateDate;
+
+    @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RouteItem> data;
 }

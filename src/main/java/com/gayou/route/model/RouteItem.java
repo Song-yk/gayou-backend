@@ -1,24 +1,24 @@
 package com.gayou.route.model;
 
 import jakarta.persistence.*;
-import lombok.*;
 import jakarta.validation.constraints.*;
+import lombok.*;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "route_item")
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class RouteItem {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    private Long head_id;
+    @NotNull
+    @ManyToOne
+    @JoinColumn(name = "head_id", nullable = false)
+    private RouteHead routeHead;
 
-    @NotBlank
-    private int days;
-
-    @NotBlank
-    private Long tot_distance;
+    @NotNull
+    @Column(name = "content_id")
+    private Long contentid;
 }
