@@ -1,8 +1,14 @@
 package com.gayou.auth.repository;
 
 import com.gayou.auth.model.User;
+import com.gayou.auth.model.AccountStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+import java.util.Date;
+import java.util.List;
 
+public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findAllByStatusAndLastLoginTimeBefore(AccountStatus status, Date time);
+
+    java.util.Optional<User> findByUsername(String username);
 }
