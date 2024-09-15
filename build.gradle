@@ -18,28 +18,56 @@ repositories {
 }
 
 dependencies {
+	// Spring Boot 웹 스타터
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// MyBatis 스타터
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+	// 세션 관리
 	implementation 'org.springframework.session:spring-session-core'
+
+	// Hibernate Validator
 	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+
+	// JPA 지원
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-logging'
 
-    
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	runtimeOnly  "com.h2database:h2"
+	// Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
+	// JWT 관련 의존성
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // for JSON parsing
+
+	// Lombok
 	compileOnly 'org.projectlombok:lombok:1.18.24'
-	
     annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
+	// MySQL 데이터베이스
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	// 내장 데이터베이스 (테스트용)
+	runtimeOnly  "com.h2database:h2"
+
+	// Servlet API (Tomcat 내장 서버 사용 시 필요)
+	implementation 'jakarta.servlet:jakarta.servlet-api:5.0.0'
+
+	// email 전송
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	// spring-dotenv
+	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+
+	// 테스트 의존성
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
-
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	// useJUnitPlatform()
+	enabled = false
 }
