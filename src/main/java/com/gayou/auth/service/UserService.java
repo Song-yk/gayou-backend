@@ -37,7 +37,7 @@ public class UserService implements UserDetailsService {
     // UserDetailsService 인터페이스 구현
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameOrEmail(username, "")
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(), Collections.emptyList());
@@ -45,7 +45,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public String authenticate(UserDto userDto) {
-        User user = userRepository.findByUsername(userDto.getUsername())
+        User user = userRepository.findByUsernameOrEmail(userDto.getUsername(), userDto.getUsername())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
@@ -62,7 +62,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void register(UserDto userDto) {
-        if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
+        if (userRepository.findByUsernameOrEmail(userDto.getUsername(), userDto.getUsername()).isPresent()) {
             throw new UserAlreadyExistsException("Username is already taken");
         }
 
@@ -82,7 +82,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void deleteUser(String token) {
         String username = jwtUtil.extractUsername(token);
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameOrEmail(username, "")
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         userRepository.delete(user);
@@ -104,7 +104,7 @@ public class UserService implements UserDetailsService {
 
     public UserDto getUserDetails(String token) {
         String username = jwtUtil.extractUsername(token);
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameOrEmail(username, "")
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         // User 엔티티를 UserDto로 변환
