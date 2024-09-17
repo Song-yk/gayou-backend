@@ -1,5 +1,6 @@
 package com.gayou.auth.controller;
 
+import com.gayou.auth.dto.LoginResponse;
 import com.gayou.auth.dto.UserDto;
 import com.gayou.auth.service.UserService;
 import com.gayou.auth.util.JwtUtil;
@@ -31,8 +32,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDto userDto) {
         // 로그인 처리 후 JWT 토큰 발급
-        String token = userService.authenticate(userDto);
-        return ResponseEntity.ok(token);
+        LoginResponse response = userService.authenticate(userDto);
+        return ResponseEntity.ok(response);
     }
 
     /**
