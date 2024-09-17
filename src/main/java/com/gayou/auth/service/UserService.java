@@ -1,5 +1,6 @@
 package com.gayou.auth.service;
 
+import com.gayou.auth.dto.LoginResponse;
 import com.gayou.auth.dto.UserDto;
 import com.gayou.auth.model.User;
 import com.gayou.auth.model.AccountStatus;
@@ -44,7 +45,7 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public String authenticate(UserDto userDto) {
+    public LoginResponse authenticate(UserDto userDto) {
         User user = userRepository.findByUsernameOrEmail(userDto.getUsername(), userDto.getUsername())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -54,7 +55,8 @@ public class UserService implements UserDetailsService {
             user.setStatus(AccountStatus.ACTIVE);
             userRepository.save(user);
 
-            return jwtUtil.generateToken(user.getUsername());
+            String token = jwtUtil.generateToken(user.getUsername());
+            return new LoginResponse(user.getId(), user.getName(), token);
         } else {
             throw new InvalidCredentialsException("Invalid username or password");
         }
