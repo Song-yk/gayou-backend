@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -34,8 +35,9 @@ public class RouteService {
 
         RouteHead routeHead = new RouteHead();
         routeHead.setUser(user);
-        routeHead.setTown(routeDTO.getTown());
         routeHead.setCourseName(routeDTO.getCourseName());
+        routeHead.setCreateDate(new Date());
+        routeHead.setTown(routeDTO.getTown());
         routeHead.setTotDistance(routeDTO.getTotDistance());
 
         RouteHead savedRouteHead = routeHeadRepository.save(routeHead);
