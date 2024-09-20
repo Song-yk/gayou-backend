@@ -20,11 +20,11 @@ public class RouteController {
     private RouteService routeService;
 
     @PostMapping("/locations")
-    public ResponseEntity<RouteHeadDto> saveCourse(@AuthenticationPrincipal String username,
+    public ResponseEntity<Long> saveCourse(@AuthenticationPrincipal String username,
             @RequestBody RouteHeadDto routeDTO) {
 
-        routeService.saveRoute(routeDTO, username);
-        return new ResponseEntity<>(routeDTO, HttpStatus.CREATED);
+        Long routeHeadId = routeService.saveRoute(routeDTO, username);
+        return new ResponseEntity<>(routeHeadId, HttpStatus.CREATED);
     }
 
     @GetMapping("/locations")

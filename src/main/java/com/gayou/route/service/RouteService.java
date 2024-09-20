@@ -39,7 +39,7 @@ public class RouteService {
     }
 
     @Transactional
-    public void saveRoute(RouteHeadDto routeDTO, String username) {
+    public Long saveRoute(RouteHeadDto routeDTO, String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         RouteHead routeHead = new RouteHead();
@@ -66,6 +66,8 @@ public class RouteService {
         }
 
         routeItemRepository.saveAll(routeItems);
+
+        return savedRouteHead.getId();
     }
 
     @Transactional
