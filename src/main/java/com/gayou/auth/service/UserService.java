@@ -1,6 +1,5 @@
 package com.gayou.auth.service;
 
-import com.gayou.auth.dto.LoginResponse;
 import com.gayou.auth.dto.UserDto;
 import com.gayou.auth.model.User;
 import com.gayou.auth.model.AccountStatus;
@@ -8,7 +7,6 @@ import com.gayou.auth.repository.UserRepository;
 import com.gayou.auth.exception.UserNotFoundException;
 import com.gayou.auth.exception.InvalidCredentialsException;
 import com.gayou.auth.exception.UserAlreadyExistsException;
-import com.gayou.auth.util.JwtUtil;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,6 +16,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.gayou.auth.dto.LoginResponse;
+import com.gayou.settings.provider.JwtProvider;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Collections;
@@ -26,19 +27,18 @@ import java.util.Collections;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
+    private final JwtProvider jwtProvider;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public UserService(UserRepository userRepository, JwtProvider jwtProvider) {
         this.userRepository = userRepository;
-        this.passwordEncoder = new BCryptPasswordEncoder();
-        this.jwtUtil = jwtUtil;
+        this.jwtProvider = jwtProvider;
     }
 
     // UserDetailsService 인터페이스 구현
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsernameOrEmail(username, "")
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(), user.getPassword(), Collections.emptyList());
@@ -55,8 +55,8 @@ public class UserService implements UserDetailsService {
             user.setStatus(AccountStatus.ACTIVE);
             userRepository.save(user);
 
-            String token = jwtUtil.generateToken(user.getUsername());
-            return new LoginResponse(user.getId(), user.getName(), token);
+            String token = jwtProvider.create(user.getUsername());
+            return new LoginResponse(user.getUsername(), token);
         } else {
             throw new InvalidCredentialsException("Invalid username or password");
         }
@@ -83,11 +83,11 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void deleteUser(String token) {
-        String username = jwtUtil.extractUsername(token);
-        User user = userRepository.findByUsernameOrEmail(username, "")
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        // String username = jwtProvider.extractUsername(token);
+        // User user = userRepository.findByUsernameOrEmail(username, "")
+        // .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        userRepository.delete(user);
+        // userRepository.delete(user);
     }
 
     // 휴먼 계정 전환 기능
@@ -105,18 +105,18 @@ public class UserService implements UserDetailsService {
     }
 
     public UserDto getUserDetails(String token) {
-        String username = jwtUtil.extractUsername(token);
-        User user = userRepository.findByUsernameOrEmail(username, "")
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        // String username = jwtProvider.extractUsername(token);
+        // User user = userRepository.findByUsernameOrEmail(username, "")
+        // .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        // User 엔티티를 UserDto로 변환
+        // // User 엔티티를 UserDto로 변환
         UserDto userDto = new UserDto();
-        userDto.setId(user.getId());
-        userDto.setUsername(user.getUsername());
-        userDto.setName(user.getName());
-        userDto.setEmail(user.getEmail());
-        userDto.setPhoneNumber(user.getPhoneNumber());
-        userDto.setBirthday(user.getBirthday());
+        // userDto.setId(user.getId());
+        // userDto.setUsername(user.getUsername());
+        // userDto.setName(user.getName());
+        // userDto.setEmail(user.getEmail());
+        // userDto.setPhoneNumber(user.getPhoneNumber());
+        // userDto.setBirthday(user.getBirthday());
 
         return userDto;
     }
