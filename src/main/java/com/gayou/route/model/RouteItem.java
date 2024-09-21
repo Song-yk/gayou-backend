@@ -3,6 +3,7 @@ package com.gayou.route.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import com.gayou.places.model.Places;
 
 @Entity
 @Getter
@@ -19,6 +20,7 @@ public class RouteItem {
     private RouteHead routeHead;
 
     @NotNull
-    @Column(name = "content_id")
-    private Long contentid;
+    @ManyToOne
+    @JoinColumn(name = "contentid", nullable = false)
+    private Places place;
 }
