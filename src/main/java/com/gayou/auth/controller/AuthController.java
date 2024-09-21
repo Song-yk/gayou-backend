@@ -6,7 +6,7 @@ import com.gayou.auth.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -71,7 +71,25 @@ public class AuthController {
         UserDto userDto = userService.getUserDetails(token);
         return ResponseEntity.ok(userDto);
     }
+    
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(
+    		@RequestParam(value="id") Long id) {
+        UserDto userDto = userService.getUserProfile(id);
+        return ResponseEntity.ok(userDto);
+    }
+    
+    @PostMapping("/profile/update")
+    public ResponseEntity<?> updateProfile(@RequestBody UserDto userDto) {
+        userService.updateProfile(userDto);
+        return ResponseEntity.ok("Update successfully");
+    }
 
+    @PostMapping("/changePassword")
+    public ResponseEntity<?> changePassword(@RequestBody UserDto userDto) {
+        userService.passwordChange(userDto);
+        return ResponseEntity.ok("Update successfully");
+    }
     /**
      * 회원 탈퇴 엔드포인트
      * 

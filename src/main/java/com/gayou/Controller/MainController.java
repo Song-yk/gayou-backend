@@ -1,4 +1,4 @@
-package com.gayou.controller;
+package com.gayou.Controller;
 
 import java.util.Map;
 

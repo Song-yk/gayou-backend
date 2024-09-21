@@ -38,6 +38,16 @@ public class User {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date birthday;
 
+    private String gender; // 성별 필드 추가 (MALE, FEMALE, OTHER 등)
+
+    private boolean isLocal; // 지역 여부 필드 추가
+
+    @Lob  // 이 어노테이션은 큰 데이터를 처리할 수 있도록 합니다.
+    @Column(columnDefinition = "LONGTEXT")  // 데이터베이스 컬럼 타입을 LONGTEXT로 설정
+    private String profilePicture;
+
+    private String description; // 설명 필드 추가
+    
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastLoginTime; // 마지막 로그인 시간 추가
 

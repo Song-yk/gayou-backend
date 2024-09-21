@@ -120,4 +120,70 @@ public class UserService implements UserDetailsService {
 
         return userDto;
     }
+    
+    public UserDto getUserProfile(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setUsername(user.getUsername());
+        userDto.setName(user.getName());
+        userDto.setEmail(user.getEmail());
+        userDto.setPhoneNumber(user.getPhoneNumber());
+        userDto.setBirthday(user.getBirthday());
+        userDto.setGender(user.getGender());
+        userDto.setIsLocal(user.isLocal());
+        userDto.setProfilePicture(user.getProfilePicture());
+        userDto.setDescription(user.getDescription());
+
+        return userDto;
+    }
+
+    @Transactional
+    public void updateProfile(UserDto userDto) {
+
+        User existingUser = userRepository.findById(userDto.getId())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (userDto.getUsername() != null) {
+            existingUser.setUsername(userDto.getUsername());
+        }
+        if (userDto.getEmail() != null) {
+            existingUser.setEmail(userDto.getEmail());
+        }
+        if (userDto.getPhoneNumber() != null) {
+            existingUser.setPhoneNumber(userDto.getPhoneNumber());
+        }
+        if (userDto.getBirthday() != null) {
+            existingUser.setBirthday(userDto.getBirthday());
+        }
+        existingUser.setGender(userDto.getGender());
+        existingUser.setLocal(userDto.getIsLocal());
+        existingUser.setProfilePicture(userDto.getProfilePicture());
+        existingUser.setDescription(userDto.getDescription());
+       
+
+        userRepository.save(existingUser);
+    }
+    
+    @Transactional
+    public void passwordChange(UserDto userDto) {
+
+        User user = userRepository.findById(userDto.getId())
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+     // 현재 비밀번호가 맞는지 확인
+//        if (!passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
+//            throw new IllegalArgumentException("Current password is incorrect");
+//        }//여기 안됨...
+
+
+        user.setPassword(passwordEncoder.encode(userDto.getNewPassword()));
+        userRepository.save(user);
+    }
 }
+
+
+
