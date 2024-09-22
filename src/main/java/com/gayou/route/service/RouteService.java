@@ -9,14 +9,11 @@ import com.gayou.route.model.RouteItem;
 import com.gayou.places.model.Places;
 import com.gayou.places.repository.PlacesRepository;
 import com.gayou.auth.repository.UserRepository;
-import com.gayou.settings.provider.JwtProvider;
 import com.gayou.route.repository.RouteHeadRepository;
 import com.gayou.route.repository.RouteItemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +35,13 @@ public class RouteService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * 사용자의 경로(Route)를 저장하는 메서드
+     *
+     * @param routeDTO - 저장할 경로 정보 (RouteHeadDto)
+     * @param username - 현재 인증된 사용자의 사용자 이름
+     * @return 저장된 경로의 ID
+     */
     @Transactional
     public Long saveRoute(RouteHeadDto routeDTO, String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
@@ -70,16 +74,19 @@ public class RouteService {
         return savedRouteHead.getId();
     }
 
+    /**
+     * 현재 사용자가 저장한 경로 목록을 가져오는 메서드
+     *
+     * @param username - 현재 인증된 사용자의 사용자 이름
+     * @return 사용자가 저장한 경로 목록 (RouteHeadDto 리스트)
+     */
     @Transactional
     public List<RouteHeadDto> getMyRoute(String username) {
-        // 유저 찾기
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 유저 ID로 RouteHead 목록 가져오기
         List<RouteHead> getRouteHead = routeHeadRepository.findAllByUserId(user.getId());
 
-        // DTO 변환
         List<RouteHeadDto> dtoData = new ArrayList<>();
         for (RouteHead head : getRouteHead) {
             RouteHeadDto routeHeadDto = new RouteHeadDto();
@@ -90,16 +97,14 @@ public class RouteService {
             routeHeadDto.setCreateDate(head.getCreateDate());
             routeHeadDto.setUpdateDate(head.getUpdateDate());
 
-            // RouteItem을 RouteItemDto로 변환
             List<RouteItemDto> dtoItemList = new ArrayList<>();
             List<RouteItem> routeItemList = head.getData();
             for (RouteItem item : routeItemList) {
                 RouteItemDto routeItemDto = new RouteItemDto();
                 routeItemDto.setId(item.getId());
 
-                // Places 엔티티를 PlacesDto로 변환
-                Places places = item.getPlace(); // RouteItem의 Places 엔티티 가져오기
-                PlacesDto placesDto = new PlacesDto(places.getContentid()); // PlacesDto로 변환
+                Places places = item.getPlace();
+                PlacesDto placesDto = new PlacesDto(places.getContentid());
                 placesDto.setTitle(places.getTitle());
                 placesDto.setAddr1(places.getAddr1());
                 placesDto.setAddr2(places.getAddr2());
@@ -119,15 +124,12 @@ public class RouteService {
                 placesDto.setOverview(places.getOverview());
                 placesDto.setLastUpdated(places.getLastUpdated());
 
-                // RouteItemDto에 PlacesDto 설정
                 routeItemDto.setContentid(placesDto);
                 dtoItemList.add(routeItemDto);
             }
 
-            // RouteHeadDto에 RouteItemDto 리스트 설정
             routeHeadDto.setData(dtoItemList);
 
-            // 최종적으로 RouteHeadDto 리스트에 추가
             dtoData.add(routeHeadDto);
         }
         return dtoData;

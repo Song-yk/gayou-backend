@@ -14,6 +14,14 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    /**
+     * 이메일 인증 코드를 전송하는 메서드
+     *
+     * @param to               - 수신자 이메일 주소
+     * @param subject          - 이메일 제목
+     * @param verificationCode - 인증 코드
+     * @throws MessagingException - 이메일 전송 시 발생할 수 있는 예외 처리
+     */
     public void sendVerificationEmail(String to, String subject, String verificationCode) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);

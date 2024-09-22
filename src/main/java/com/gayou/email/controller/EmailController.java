@@ -19,6 +19,12 @@ public class EmailController {
         this.emailService = emailService;
     }
 
+    /**
+     * 이메일 인증 코드를 전송하는 메서드
+     *
+     * @param request - 이메일 요청 객체 (EmailRequest)
+     * @return ResponseEntity<?> - 전송된 인증 코드 또는 오류 메시지
+     */
     @PostMapping("/join")
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequest request) {
         Random random = new Random();
@@ -31,6 +37,7 @@ public class EmailController {
         }
     }
 
+    // 내부 클래스 EmailRequest: 이메일 요청 데이터 전달
     static class EmailRequest {
         private String email;
 
