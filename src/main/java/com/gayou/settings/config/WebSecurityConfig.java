@@ -7,6 +7,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.gayou.settings.filter.JwtAuthenticationFilter;
 
@@ -19,6 +22,7 @@ import java.io.IOException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.AuthenticationException;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -37,23 +41,29 @@ public class WebSecurityConfig {
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .cors().and() // CORS 설정
-                .csrf().disable() // CSRF 보호 비활성화
-                .httpBasic().disable() // 기본 HTTP 인증 비활성화
-                // 세션 관리 정책을 상태 비저장 방식으로 설정 (JWT 사용)
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeHttpRequests() // 요청에 대한 인가 설정
-                // 로그인, 회원가입, 카카오 콜백 엔드포인트는 인증 필요 없음
-                .requestMatchers("/auth/login", "/auth/register", "/email/join", "auth/kakao/callback").permitAll()
+                .csrf(csrf -> csrf.disable()) // CSRF 비활성화
+                .httpBasic(httpBasic -> httpBasic.disable()) // HTTP 기본 인증 비활성화
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/auth/login", "/auth/register", "/email/join", "/auth/kakao/callback")
+                        .permitAll()
+                        .anyRequest().authenticated()) // 인증 요청 설정
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(new FailedAuthenticationEntryPoint())); // 인증 실패 시 처리
 
-                .anyRequest().authenticated().and() // 그 외 모든 요청은 인증 필요
-                // 인증 실패 시 처리할 핸들러 설정
-                .exceptionHandling().authenticationEntryPoint(new FailedAuthenticationEntryPoint());
+        httpSecurity.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터 추가
 
-        // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 앞에 추가
-        httpSecurity.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        return httpSecurity.build();
+    }
 
-        return httpSecurity.build(); // 보안 필터 체인 빌드
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173")); // 허용할 도메인 설정
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // 허용할 메서드 설정
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
 
@@ -74,7 +84,7 @@ class FailedAuthenticationEntryPoint implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException, ServletException {
-        response.setContentType("application/json"); // 응답의 컨텐츠 타입을 JSON으로 설정
+        // response.setContentType("application/json"); // 응답의 컨텐츠 타입을 JSON으로 설정
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 응답 상태 코드를 401 (Unauthorized)로 설정
         // JSON 형식으로 인증 실패 메시지 작성
         response.getWriter().write("{ \"message\": \"Authentication has failed. Please check your credentials.\" }");

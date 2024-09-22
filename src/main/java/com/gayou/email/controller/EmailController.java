@@ -30,7 +30,8 @@ public class EmailController {
         Random random = new Random();
         String verificationCode = String.format("%06d", random.nextInt(999999));
         try {
-            emailService.sendVerificationEmail(request.getEmail(), "Email Verification", verificationCode);
+            emailService.sendVerificationEmail(request.getEmail(), "Email Verification",
+                    verificationCode);
             return ResponseEntity.ok(verificationCode);
         } catch (MessagingException e) {
             return ResponseEntity.status(500).body("Failed to send email!");
