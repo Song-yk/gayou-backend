@@ -79,7 +79,7 @@ public class UserService implements UserDetailsService {
             user.setStatus(AccountStatus.ACTIVE);
             userRepository.save(user);
 
-            String token = jwtProvider.create(user.getUsername());
+            String token = jwtProvider.create(user.getEmail());
             return new LoginResponse(user.getName(), token);
         } else {
             throw new InvalidCredentialsException("Invalid username or password");
@@ -157,7 +157,7 @@ public class UserService implements UserDetailsService {
         user.setStatus(AccountStatus.ACTIVE);
         userRepository.save(user);
 
-        String token = jwtProvider.create(user.getUsername());
+        String token = jwtProvider.create(user.getEmail());
         return new LoginResponse(user.getName(), token);
     }
 
@@ -218,12 +218,12 @@ public class UserService implements UserDetailsService {
     /**
      * 특정 사용자의 프로필 정보를 반환하는 메서드
      *
-     * @param id - 사용자의 고유 ID
+     * @param email - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
      * @return UserDto - 사용자 프로필 정보
      * @throws UserNotFoundException - 사용자를 찾을 수 없는 경우 예외 발생
      */
-    public UserDto getUserProfile(Long id) {
-        User user = userRepository.findById(id)
+    public UserDto getUserProfile(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         UserDto userDto = new UserDto();

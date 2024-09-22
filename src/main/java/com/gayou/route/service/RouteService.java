@@ -39,12 +39,12 @@ public class RouteService {
      * 사용자의 경로(Route)를 저장하는 메서드
      *
      * @param routeDTO - 저장할 경로 정보 (RouteHeadDto)
-     * @param username - 현재 인증된 사용자의 사용자 이름
+     * @param email    - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
      * @return 저장된 경로의 ID
      */
     @Transactional
-    public Long saveRoute(RouteHeadDto routeDTO, String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+    public Long saveRoute(RouteHeadDto routeDTO, String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
 
         RouteHead routeHead = new RouteHead();
         routeHead.setUser(user);
@@ -77,12 +77,12 @@ public class RouteService {
     /**
      * 현재 사용자가 저장한 경로 목록을 가져오는 메서드
      *
-     * @param username - 현재 인증된 사용자의 사용자 이름
+     * @param email - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
      * @return 사용자가 저장한 경로 목록 (RouteHeadDto 리스트)
      */
     @Transactional
-    public List<RouteHeadDto> getMyRoute(String username) {
-        User user = userRepository.findByUsername(username)
+    public List<RouteHeadDto> getMyRoute(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<RouteHead> getRouteHead = routeHeadRepository.findAllByUserId(user.getId());

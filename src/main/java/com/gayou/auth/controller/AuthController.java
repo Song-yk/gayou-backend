@@ -12,12 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,8 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gayou.auth.dto.LoginResponse;
 import com.gayou.auth.dto.UserDto;
 import com.gayou.auth.service.UserService;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
@@ -178,27 +174,14 @@ public class AuthController {
     }
 
     /**
-     * 현재 로그인한 사용자의 정보를 반환하는 엔드포인트
-     * 
-     * @param username - 현재 인증된 사용자의 이름
-     * @return 사용자의 상세 정보가 담긴 ResponseEntity
-     */
-    @GetMapping("/me")
-    public ResponseEntity<?> getMyInfo(@AuthenticationPrincipal String username) {
-        UserDto userDto = userService.getUserDetails(username);
-        return ResponseEntity.ok(userDto);
-    }
-
-    /**
      * 특정 사용자의 프로필 정보를 반환하는 엔드포인트
      * 
-     * @param id - 조회할 사용자의 ID
+     * @param email - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
      * @return 사용자의 프로필 정보가 담긴 ResponseEntity
      */
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile(
-            @RequestParam(value = "id") Long id) {
-        UserDto userDto = userService.getUserProfile(id);
+    public ResponseEntity<?> getProfile(@AuthenticationPrincipal String email) {
+        UserDto userDto = userService.getUserProfile(email);
         return ResponseEntity.ok(userDto);
     }
 
@@ -224,29 +207,5 @@ public class AuthController {
     public ResponseEntity<?> changePassword(@RequestBody UserDto userDto) {
         userService.passwordChange(userDto);
         return ResponseEntity.ok("Update successfully");
-    }
-
-    /**
-     * 회원 탈퇴 엔드포인트
-     * 
-     * @param request - HTTP 요청 (Authorization 헤더에 JWT 토큰이 있어야 함)
-     * @return 성공 메시지가 담긴 ResponseEntity
-     * 
-     *         현재 로그인한 사용자의 계정을 삭제합니다. JWT 토큰을 통해 사용자를 인증한 후, 해당 사용자를 데이터베이스에서
-     *         삭제합니다.
-     *         JWT 토큰이 없거나 유효하지 않으면 401 Unauthorized 응답을 반환합니다.
-     */
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser(HttpServletRequest request) {
-        // Authorization 헤더에서 JWT 토큰 추출
-        String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body("Missing or invalid Authorization header");
-        }
-
-        // JWT 토큰에서 사용자 정보를 추출하고, 해당 사용자를 삭제
-        String token = authorizationHeader.substring(7);
-        userService.deleteUser(token);
-        return ResponseEntity.ok("User deleted successfully");
     }
 }
