@@ -39,4 +39,10 @@ public class RouteHead {
 
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteItem> data;
+
+    private List<String> tag;
+
+    private String content;
+
+    private Long totlike;
 }
