@@ -1,6 +1,8 @@
 package com.gayou.route.controller;
 
 import com.gayou.route.dto.RouteHeadDto;
+import com.gayou.route.model.RouteHead;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,5 +44,19 @@ public class RouteController {
     public ResponseEntity<?> getMyCourse(@AuthenticationPrincipal String email) {
         List<RouteHeadDto> data = routeService.getMyRoute(email);
         return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/data")
+    public ResponseEntity<?> getPostData(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        return ResponseEntity.ok(routeService.getRoute(id)); // 특정 ID에 해당하는 데이터를 반환
+    }
+
+    @PutMapping("/post")
+    public ResponseEntity<?> updateroutehead(@AuthenticationPrincipal String email,
+            @RequestBody RouteHeadDto routeDTO) {
+
+        routeService.updateRouteHead(routeDTO);
+
+        return ResponseEntity.ok("success update");
     }
 }

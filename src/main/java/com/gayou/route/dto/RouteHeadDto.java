@@ -15,4 +15,7 @@ public class RouteHeadDto {
     private Date createDate;
     private Date updateDate;
     private List<RouteItemDto> data;
+    private List<String> tag;
+    private String content;
+    private Long totlike;
 }
