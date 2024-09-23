@@ -45,7 +45,8 @@ public class WebSecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP 기본 인증 비활성화
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register", "/email/join", "/auth/kakao/callback")
+                        .requestMatchers("/auth/login", "/auth/register", "/email/join", "/locations/*",
+                                "/auth/kakao/callback")
                         .permitAll()
                         .anyRequest().authenticated()) // 인증 요청 설정
                 .exceptionHandling(ex -> ex
