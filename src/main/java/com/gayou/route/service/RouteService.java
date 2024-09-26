@@ -146,6 +146,7 @@ public class RouteService {
         routeHeadDto.setTown(head.getTown());
         routeHeadDto.setCourseName(head.getCourseName());
         routeHeadDto.setTotDistance(head.getTotDistance());
+        routeHeadDto.setContent(head.getContent());
         routeHeadDto.setCreateDate(head.getCreateDate());
         routeHeadDto.setUpdateDate(head.getUpdateDate());
 
