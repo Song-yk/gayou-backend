@@ -1,23 +1,29 @@
 package com.gayou.route.service;
 
-import com.gayou.route.dto.RouteHeadDto;
-import com.gayou.route.dto.RouteItemDto;
-import com.gayou.places.dto.PlacesDto;
-import com.gayou.auth.model.User;
-import com.gayou.route.model.RouteHead;
-import com.gayou.route.model.RouteItem;
-import com.gayou.places.model.Places;
-import com.gayou.places.repository.PlacesRepository;
-import com.gayou.auth.repository.UserRepository;
-import com.gayou.route.repository.RouteHeadRepository;
-import com.gayou.route.repository.RouteItemRepository;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import com.gayou.auth.model.User;
+import com.gayou.auth.repository.UserRepository;
+import com.gayou.hashtag.model.Hashtag;
+import com.gayou.hashtag.repository.HashtagRepository;
+import com.gayou.places.dto.PlacesDto;
+import com.gayou.places.model.Places;
+import com.gayou.places.repository.PlacesRepository;
+import com.gayou.route.dto.RouteHeadDto;
+import com.gayou.route.dto.RouteItemDto;
+import com.gayou.route.model.RouteHashtags;
+import com.gayou.route.model.RouteHead;
+import com.gayou.route.model.RouteItem;
+import com.gayou.route.repository.RouteHashtagsRepository;
+import com.gayou.route.repository.RouteHeadRepository;
+import com.gayou.route.repository.RouteItemRepository;
 
 @Service
 public class RouteService {
@@ -25,14 +31,18 @@ public class RouteService {
     private final RouteHeadRepository routeHeadRepository;
     private final RouteItemRepository routeItemRepository;
     private final PlacesRepository placesRepository;
+    private final HashtagRepository hashtagRepository;
+    private final RouteHashtagsRepository routeHashtagsRepository;
     private final UserRepository userRepository;
 
     public RouteService(RouteHeadRepository routeHeadRepository, RouteItemRepository routeItemRepository,
-            PlacesRepository placesRepository,
-            UserRepository userRepository) {
+            PlacesRepository placesRepository, RouteHashtagsRepository routeHashtagsRepository,
+            HashtagRepository hashtagRepository, UserRepository userRepository) {
         this.routeHeadRepository = routeHeadRepository;
         this.routeItemRepository = routeItemRepository;
         this.placesRepository = placesRepository;
+        this.hashtagRepository = hashtagRepository;
+        this.routeHashtagsRepository = routeHashtagsRepository;
         this.userRepository = userRepository;
     }
 
@@ -187,13 +197,55 @@ public class RouteService {
         return routeHeadDto;
     }
 
+    @Transactional
     public void updateRouteHead(RouteHeadDto routeHeadDto) {
+        // 1. RouteHead 엔티티를 가져옴
         RouteHead routeHead = routeHeadRepository.findById(routeHeadDto.getId())
-                .orElseThrow(() -> new RuntimeException("route not found"));
+                .orElseThrow(() -> new RuntimeException("Route not found"));
 
+        // 2. 기본 정보 업데이트
         routeHead.setCourseName(routeHeadDto.getCourseName());
-        routeHead.setTag(routeHeadDto.getTag());
         routeHead.setContent(routeHeadDto.getContent());
+
+        // 3. 해시태그가 null인 경우 빈 리스트로 처리
+        List<String> tagList = routeHeadDto.getTag() != null ? routeHeadDto.getTag() : Collections.emptyList();
+
+        // 4. 기존 해시태그 조회
+        List<String> existingTags = hashtagRepository.findExistingTags(tagList);
+
+        // 5. 중복되지 않은 새로운 태그 필터링
+        List<String> nonDuplicateTags = tagList.stream()
+                .filter(tag -> !existingTags.contains(tag))
+                .collect(Collectors.toList());
+
+        // 6. 새로운 태그가 있으면 저장
+        List<Hashtag> newHashtags = nonDuplicateTags.stream()
+                .map(tag -> {
+                    Hashtag hashtag = new Hashtag();
+                    hashtag.setTagName(tag);
+                    return hashtag;
+                }).collect(Collectors.toList());
+
+        hashtagRepository.saveAll(newHashtags);
+
+        // 7. RouteHashtags 설정 (기존 해시태그 + 새로운 해시태그)
+        List<Hashtag> allTags = hashtagRepository.findByTagNameIn(tagList);
+        List<RouteHashtags> routeHashtags = allTags.stream()
+                .map(hashtag -> {
+                    RouteHashtags routeHashtag = new RouteHashtags();
+                    routeHashtag.setRouteHead(routeHead);
+                    routeHashtag.setHashtag(hashtag);
+                    return routeHashtag;
+                }).collect(Collectors.toList());
+
+        // 8. 해당 routeHeadId에 대한 기존 RouteHashtags 삭제
+        routeHashtagsRepository.deleteByRouteHeadId(routeHead.getId());
+
+        // 9. 새로운 RouteHashtags 삽입
+        routeHashtagsRepository.saveAll(routeHashtags);
+
+        // 10. RouteHead 업데이트 저장
+        routeHead.setRouteHashtags(routeHashtags); // 연관 관계 설정
         routeHeadRepository.save(routeHead);
     }
 
