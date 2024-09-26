@@ -1,8 +1,8 @@
 package com.gayou.route.dto;
 
-import lombok.Data;
-
 import com.gayou.places.dto.PlacesDto;
+
+import lombok.Data;
 
 @Data
 public class RouteItemDto {

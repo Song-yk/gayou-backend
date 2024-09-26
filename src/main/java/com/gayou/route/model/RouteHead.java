@@ -1,14 +1,26 @@
 package com.gayou.route.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
-
 import java.util.Date;
 import java.util.List;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+
 import com.gayou.auth.model.User;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -40,9 +52,10 @@ public class RouteHead {
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteItem> data;
 
-    private List<String> tag;
-
     private String content;
 
     private Long totlike;
+
+    @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL)
+    private List<RouteHashtags> routeHashtags;
 }
