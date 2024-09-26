@@ -147,6 +147,7 @@ public class RouteService {
         routeHeadDto.setCourseName(head.getCourseName());
         routeHeadDto.setTotDistance(head.getTotDistance());
         routeHeadDto.setContent(head.getContent());
+        routeHeadDto.setTotlike(head.getTotlike());
         routeHeadDto.setCreateDate(head.getCreateDate());
         routeHeadDto.setUpdateDate(head.getUpdateDate());
 
@@ -194,5 +195,14 @@ public class RouteService {
         routeHead.setTag(routeHeadDto.getTag());
         routeHead.setContent(routeHeadDto.getContent());
         routeHeadRepository.save(routeHead);
+    }
+
+    public void updateLike(RouteHeadDto routeHeadDto) {
+        RouteHead routeHead = routeHeadRepository.findById(routeHeadDto.getId())
+                .orElseThrow(() -> new RuntimeException("route not found"));
+
+        routeHead.setTotlike(routeHeadDto.getTotlike());
+        routeHeadRepository.save(routeHead);
+
     }
 }

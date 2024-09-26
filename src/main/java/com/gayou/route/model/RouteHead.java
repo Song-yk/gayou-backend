@@ -44,5 +44,5 @@ public class RouteHead {
 
     private String content;
 
-    private Long totlike;
+    private Long totlike = 0L;
 }

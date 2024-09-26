@@ -59,4 +59,13 @@ public class RouteController {
 
         return ResponseEntity.ok("success update");
     }
+
+    @PutMapping("/like")
+    public ResponseEntity<?> updatelike(@AuthenticationPrincipal String email,
+            @RequestBody RouteHeadDto routeDTO) {
+
+        routeService.updateLike(routeDTO);
+
+        return ResponseEntity.ok("success update");
+    }
 }
