@@ -3,6 +3,8 @@ package com.gayou.route.dto;
 import java.util.Date;
 import java.util.List;
 
+import com.gayou.hashtag.dto.HashtagDto;
+
 import lombok.Data;
 
 @Data

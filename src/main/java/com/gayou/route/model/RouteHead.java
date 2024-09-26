@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import com.gayou.auth.model.User;
@@ -40,9 +42,10 @@ public class RouteHead {
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteItem> data;
 
-    private List<String> tag;
-
     private String content;
 
     private Long totlike;
+
+    @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL)
+    private List<RouteHashtags> routeHashtags;
 }
