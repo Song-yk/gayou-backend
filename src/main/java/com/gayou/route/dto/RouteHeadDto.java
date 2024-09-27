@@ -3,12 +3,14 @@ package com.gayou.route.dto;
 import java.util.Date;
 import java.util.List;
 
+import com.gayou.auth.model.User;
+
 import lombok.Data;
 
 @Data
 public class RouteHeadDto {
     private Long id;
-    private Long userId;
+    private User userId;
     private String town;
     private String courseName;
     private Long totDistance;
