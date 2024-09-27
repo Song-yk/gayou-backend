@@ -38,7 +38,6 @@ public class RouteHead {
     @NotBlank
     private String town;
 
-    @NotBlank
     private String courseName;
 
     private Long totDistance;

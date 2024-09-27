@@ -59,7 +59,6 @@ public class RouteService {
 
         RouteHead routeHead = new RouteHead();
         routeHead.setUser(user);
-        routeHead.setCourseName(routeDTO.getCourseName());
         routeHead.setCreateDate(new Date());
         routeHead.setTown(routeDTO.getTown());
         routeHead.setTotDistance(routeDTO.getTotDistance());
@@ -96,20 +95,31 @@ public class RouteService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<RouteHead> getRouteHead = routeHeadRepository.findAllByUserId(user.getId());
+        List<RouteHead> headList = routeHeadRepository.findAllByUserId(user.getId());
 
-        List<RouteHeadDto> dtoData = new ArrayList<>();
-        for (RouteHead head : getRouteHead) {
+        List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
+
+        for (RouteHead head : headList) {
             RouteHeadDto routeHeadDto = new RouteHeadDto();
             routeHeadDto.setId(head.getId());
             routeHeadDto.setTown(head.getTown());
             routeHeadDto.setCourseName(head.getCourseName());
             routeHeadDto.setTotDistance(head.getTotDistance());
+            routeHeadDto.setContent(head.getContent());
+            routeHeadDto.setTotlike(head.getTotlike());
             routeHeadDto.setCreateDate(head.getCreateDate());
             routeHeadDto.setUpdateDate(head.getUpdateDate());
 
+            List<String> hashtagList = new ArrayList<>();
+            for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
+                hashtagList.add(routeHashtag.getHashtag().getTagName());
+            }
+
+            routeHeadDto.setTag(hashtagList);
+
             List<RouteItemDto> dtoItemList = new ArrayList<>();
             List<RouteItem> routeItemList = head.getData();
+
             for (RouteItem item : routeItemList) {
                 RouteItemDto routeItemDto = new RouteItemDto();
                 routeItemDto.setId(item.getId());
@@ -140,10 +150,10 @@ public class RouteService {
             }
 
             routeHeadDto.setData(dtoItemList);
-
-            dtoData.add(routeHeadDto);
+            routeHeadDtoList.add(routeHeadDto);
         }
-        return dtoData;
+
+        return routeHeadDtoList;
     }
 
     @Transactional
@@ -160,6 +170,13 @@ public class RouteService {
         routeHeadDto.setTotlike(head.getTotlike());
         routeHeadDto.setCreateDate(head.getCreateDate());
         routeHeadDto.setUpdateDate(head.getUpdateDate());
+
+        List<String> hashtagList = new ArrayList<>();
+        for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
+            hashtagList.add(routeHashtag.getHashtag().getTagName());
+        }
+
+        routeHeadDto.setTag(hashtagList);
 
         List<RouteItemDto> dtoItemList = new ArrayList<>();
         List<RouteItem> routeItemList = head.getData();
@@ -195,6 +212,70 @@ public class RouteService {
         routeHeadDto.setData(dtoItemList);
 
         return routeHeadDto;
+    }
+
+    @Transactional
+    public List<RouteHeadDto> getRoutes() {
+        List<RouteHead> headList = routeHeadRepository.findAll();
+
+        List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
+
+        for (RouteHead head : headList) {
+            RouteHeadDto routeHeadDto = new RouteHeadDto();
+            routeHeadDto.setId(head.getId());
+            routeHeadDto.setTown(head.getTown());
+            routeHeadDto.setCourseName(head.getCourseName());
+            routeHeadDto.setTotDistance(head.getTotDistance());
+            routeHeadDto.setContent(head.getContent());
+            routeHeadDto.setTotlike(head.getTotlike());
+            routeHeadDto.setCreateDate(head.getCreateDate());
+            routeHeadDto.setUpdateDate(head.getUpdateDate());
+            routeHeadDto.setUserId(head.getUser());
+
+            List<String> hashtagList = new ArrayList<>();
+            for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
+                hashtagList.add(routeHashtag.getHashtag().getTagName());
+            }
+
+            routeHeadDto.setTag(hashtagList);
+
+            List<RouteItemDto> dtoItemList = new ArrayList<>();
+            List<RouteItem> routeItemList = head.getData();
+
+            for (RouteItem item : routeItemList) {
+                RouteItemDto routeItemDto = new RouteItemDto();
+                routeItemDto.setId(item.getId());
+
+                Places places = item.getPlace();
+                PlacesDto placesDto = new PlacesDto(places.getContentid());
+                placesDto.setTitle(places.getTitle());
+                placesDto.setAddr1(places.getAddr1());
+                placesDto.setAddr2(places.getAddr2());
+                placesDto.setAreacode(places.getAreacode());
+                placesDto.setBooktour(places.getBooktour());
+                placesDto.setCat1(places.getCat1());
+                placesDto.setCat2(places.getCat2());
+                placesDto.setCat3(places.getCat3());
+                placesDto.setContenttypeid(places.getContenttypeid());
+                placesDto.setCreatedtime(places.getCreatedtime());
+                placesDto.setFirstimage(places.getFirstimage());
+                placesDto.setFirstimage2(places.getFirstimage2());
+                placesDto.setMapx(places.getMapx());
+                placesDto.setMapy(places.getMapy());
+                placesDto.setModifiedtime(places.getModifiedtime());
+                placesDto.setTel(places.getTel());
+                placesDto.setOverview(places.getOverview());
+                placesDto.setLastUpdated(places.getLastUpdated());
+
+                routeItemDto.setContentid(placesDto);
+                dtoItemList.add(routeItemDto);
+            }
+
+            routeHeadDto.setData(dtoItemList);
+            routeHeadDtoList.add(routeHeadDto);
+        }
+
+        return routeHeadDtoList;
     }
 
     @Transactional

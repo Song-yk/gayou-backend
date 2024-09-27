@@ -56,6 +56,11 @@ public class RouteController {
         return ResponseEntity.ok(routeService.getRoute(id)); // 특정 ID에 해당하는 데이터를 반환
     }
 
+    @GetMapping("/datas")
+    public ResponseEntity<?> getPostDatas(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok(routeService.getRoutes()); // 특정 ID에 해당하는 데이터를 반환
+    }
+
     @PutMapping("/post")
     public ResponseEntity<?> updateroutehead(@AuthenticationPrincipal String email,
             @RequestBody RouteHeadDto routeDTO) {
