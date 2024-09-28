@@ -32,6 +32,8 @@ public class AuthController {
     // application.properties 파일에서 Kakao REST API 키를 주입받음
     @Value("${kakao.rest.api.key}")
     private String KAKAO_REST_API_KEY;
+    @Value("${kakao.redirect.uri}")
+    private String KAKAO_REDIRECT_URI;
 
     // UserService 객체를 주입받아 사용
     private final UserService userService;
@@ -120,7 +122,7 @@ public class AuthController {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", KAKAO_REST_API_KEY);
-        params.add("redirect_uri", "http://localhost:5173/auth/kakao/callback");
+        params.add("redirect_uri", KAKAO_REDIRECT_URI);
         params.add("code", code);
 
         // 카카오 인증 서버로 요청을 보내 액세스 토큰을 받아옴
