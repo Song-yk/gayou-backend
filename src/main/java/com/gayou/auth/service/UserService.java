@@ -49,29 +49,29 @@ public class UserService implements UserDetailsService {
     /**
      * 사용자 이름으로 사용자 인증 정보를 로드하는 메서드
      *
-     * @param username - 사용자의 사용자 이름 (username)
+     * @param email - 사용자의 사용자 이름 (email)
      * @return UserDetails - Spring Security에서 사용하는 사용자 인증 정보
-     * @throws UsernameNotFoundException - 사용자 이름을 찾을 수 없는 경우 예외 발생
+     * @throws EmailNotFoundException - 사용자 이름을 찾을 수 없는 경우 예외 발생
      */
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(), user.getPassword(), Collections.emptyList());
+                user.getEmail(), user.getPassword(), Collections.emptyList());
     }
 
     /**
      * 사용자를 인증하고 JWT 토큰을 발급하는 메서드
      *
-     * @param userDto - 사용자의 로그인 정보 (username 또는 email, password)
+     * @param userDto - 사용자의 로그인 정보 (email 또는 email, password)
      * @return LoginResponse - 인증에 성공하면 JWT 토큰을 반환
      * @throws InvalidCredentialsException - 비밀번호가 일치하지 않을 경우 예외 발생
      * @throws UserNotFoundException       - 사용자를 찾을 수 없는 경우 예외 발생
      */
     @Transactional
     public LoginResponse authenticate(UserDto userDto) {
-        User user = userRepository.findByUsernameOrEmail(userDto.getUsername(), userDto.getUsername())
+        User user = userRepository.findByEmail(userDto.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
@@ -80,9 +80,9 @@ public class UserService implements UserDetailsService {
             userRepository.save(user);
 
             String token = jwtProvider.create(user.getEmail());
-            return new LoginResponse(user.getName(), token);
+            return new LoginResponse(user.getName(), user.getProfilePicture(), token);
         } else {
-            throw new InvalidCredentialsException("Invalid username or password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
     }
 
@@ -94,15 +94,14 @@ public class UserService implements UserDetailsService {
      */
     @Transactional
     public void register(UserDto userDto) {
-        if (userRepository.findByUsernameOrEmail(userDto.getUsername(), userDto.getUsername()).isPresent()) {
-            throw new UserAlreadyExistsException("Username is already taken");
+        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("Email is already taken");
         }
 
         User newUser = new User();
-        newUser.setUsername(userDto.getUsername());
+        newUser.setEmail(userDto.getEmail());
         newUser.setName(userDto.getName());
         newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        newUser.setEmail(userDto.getEmail());
         newUser.setPhoneNumber(userDto.getPhoneNumber());
         newUser.setBirthday(userDto.getBirthday());
         newUser.setLastLoginTime(new Date());
@@ -140,7 +139,6 @@ public class UserService implements UserDetailsService {
     public LoginResponse kakaoLogin(String email) {
         if (!userRepository.findByEmail(email).isPresent()) {
             User newUser = new User();
-            newUser.setUsername(email.split("@")[0]);
             newUser.setName(email.split("@")[0]);
             newUser.setPassword(passwordEncoder.encode(passwordEncoder.encode(getRandomPassword(10))));
             newUser.setEmail(email);
@@ -150,7 +148,7 @@ public class UserService implements UserDetailsService {
             userRepository.save(newUser);
         }
 
-        User user = userRepository.findByUsernameOrEmail("", email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         user.setLastLoginTime(new Date());
@@ -158,21 +156,7 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
 
         String token = jwtProvider.create(user.getEmail());
-        return new LoginResponse(user.getName(), token);
-    }
-
-    /**
-     * 사용자를 삭제하는 메서드 (토큰을 기반으로 사용자 식별)
-     *
-     * @param token - JWT 토큰 (사용자 식별을 위해 사용)
-     */
-    @Transactional
-    public void deleteUser(String token) {
-        // String username = jwtProvider.extractUsername(token);
-        // User user = userRepository.findByUsernameOrEmail(username, "")
-        // .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        // userRepository.delete(user);
+        return new LoginResponse(user.getName(), user.getProfilePicture(), token);
     }
 
     /**
@@ -194,28 +178,6 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * 사용자의 상세 정보를 반환하는 메서드
-     *
-     * @param token - JWT 토큰 (사용자 식별을 위해 사용)
-     * @return UserDto - 사용자 정보
-     */
-    public UserDto getUserDetails(String token) {
-        // String username = jwtProvider.extractUsername(token);
-        // User user = userRepository.findByUsernameOrEmail(username, "")
-        // .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        UserDto userDto = new UserDto();
-        // userDto.setId(user.getId());
-        // userDto.setUsername(user.getUsername());
-        // userDto.setName(user.getName());
-        // userDto.setEmail(user.getEmail());
-        // userDto.setPhoneNumber(user.getPhoneNumber());
-        // userDto.setBirthday(user.getBirthday());
-
-        return userDto;
-    }
-
-    /**
      * 특정 사용자의 프로필 정보를 반환하는 메서드
      *
      * @param email - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
@@ -228,9 +190,8 @@ public class UserService implements UserDetailsService {
 
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());
-        userDto.setUsername(user.getUsername());
-        userDto.setName(user.getName());
         userDto.setEmail(user.getEmail());
+        userDto.setName(user.getName());
         userDto.setPhoneNumber(user.getPhoneNumber());
         userDto.setBirthday(user.getBirthday());
         userDto.setGender(user.getGender());
@@ -253,9 +214,6 @@ public class UserService implements UserDetailsService {
         User existingUser = userRepository.findById(userDto.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (userDto.getUsername() != null) {
-            existingUser.setUsername(userDto.getUsername());
-        }
         if (userDto.getEmail() != null) {
             existingUser.setEmail(userDto.getEmail());
         }
