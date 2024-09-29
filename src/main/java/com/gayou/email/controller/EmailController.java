@@ -28,17 +28,21 @@ public class EmailController {
     @PostMapping("/join")
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequest request) {
         Random random = new Random();
-        String verificationCode = String.format("%06d", random.nextInt(999999));
+        String verificationCode = String.format("%06d", random.nextInt(999999)); // 6자리 난수 생성
+
         try {
-            emailService.sendVerificationEmail(request.getEmail(), "Email Verification",
-                    verificationCode);
+            emailService.sendVerificationEmail(request.getEmail(), "Email Verification", verificationCode);
             return ResponseEntity.ok(verificationCode);
         } catch (MessagingException e) {
-            return ResponseEntity.status(500).body("Failed to send email!");
+            return ResponseEntity.status(500).body("이메일 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
         }
     }
 
-    // 내부 클래스 EmailRequest: 이메일 요청 데이터 전달
+    /**
+     * 이메일 요청을 위한 내부 클래스
+     */
     static class EmailRequest {
         private String email;
 
