@@ -209,20 +209,20 @@ public class UserService implements UserDetailsService {
      * @throws RuntimeException - 사용자를 찾을 수 없는 경우 예외 발생
      */
     @Transactional
-    public void updateProfile(UserDto userDto) {
+    public void updateProfile(String email, UserDto userDto) {
 
-        User existingUser = userRepository.findById(userDto.getId())
+        User existingUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (userDto.getEmail() != null) {
-            existingUser.setEmail(userDto.getEmail());
-        }
         if (userDto.getPhoneNumber() != null) {
             existingUser.setPhoneNumber(userDto.getPhoneNumber());
         }
+
         if (userDto.getBirthday() != null) {
             existingUser.setBirthday(userDto.getBirthday());
         }
+
+        existingUser.setName(userDto.getName());
         existingUser.setGender(userDto.getGender());
         existingUser.setLocal(userDto.getIsLocal());
         existingUser.setProfilePicture(userDto.getProfilePicture());
@@ -238,7 +238,7 @@ public class UserService implements UserDetailsService {
      * @throws RuntimeException - 사용자를 찾을 수 없는 경우 예외 발생
      */
     @Transactional
-    public void passwordChange(UserDto userDto) {
+    public void passwordChange(String email, UserDto userDto) {
 
         User user = userRepository.findById(userDto.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
