@@ -187,9 +187,9 @@ public class AuthController {
      * @return 성공 메시지가 담긴 ResponseEntity
      */
     @PostMapping("/profile/update")
-    public ResponseEntity<?> updateProfile(@RequestBody UserDto userDto) {
+    public ResponseEntity<?> updateProfile(@AuthenticationPrincipal String email, @RequestBody UserDto userDto) {
         try {
-            userService.updateProfile(userDto);
+            userService.updateProfile(email, userDto);
             return ResponseEntity.ok("프로필이 성공적으로 업데이트되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로필 업데이트 중 오류가 발생했습니다.");
@@ -203,9 +203,9 @@ public class AuthController {
      * @return 성공 메시지가 담긴 ResponseEntity
      */
     @PostMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@RequestBody UserDto userDto) {
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal String email, @RequestBody UserDto userDto) {
         try {
-            userService.passwordChange(userDto);
+            userService.passwordChange(email, userDto);
             return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("비밀번호 변경 중 오류가 발생했습니다.");
