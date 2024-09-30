@@ -32,11 +32,16 @@ public class RouteController {
      * @return ResponseEntity<Long> - 생성된 경로의 ID와 함께 HTTP 상태 코드를 반환
      */
     @PostMapping("/locations")
-    public ResponseEntity<Long> saveCourse(@AuthenticationPrincipal String email,
+    public ResponseEntity<?> saveCourse(@AuthenticationPrincipal String email,
             @RequestBody RouteHeadDto routeDTO) {
-
-        Long routeHeadId = routeService.saveRoute(routeDTO, email);
-        return new ResponseEntity<>(routeHeadId, HttpStatus.CREATED);
+        try {
+            Long routeHeadId = routeService.saveRoute(routeDTO, email);
+            return ResponseEntity.status(HttpStatus.CREATED).body(routeHeadId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("잘못된 경로 데이터입니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("경로 저장 중 문제가 발생했습니다.");
+        }
     }
 
     /**
@@ -47,35 +52,90 @@ public class RouteController {
      */
     @GetMapping("/locations")
     public ResponseEntity<?> getMyCourse(@AuthenticationPrincipal String email) {
-        List<RouteHeadDto> data = routeService.getMyRoute(email);
-        return ResponseEntity.ok(data);
+        try {
+            List<RouteHeadDto> data = routeService.getMyRoute(email);
+            if (data.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("저장된 경로가 없습니다.");
+            }
+            return ResponseEntity.ok(data);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("경로 목록 조회 중 문제가 발생했습니다.");
+        }
     }
 
+    /**
+     * 특정 경로 데이터를 ID로 조회하는 메서드
+     *
+     * @param email - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
+     * @param id    - 조회할 경로의 ID
+     * @return ResponseEntity<?> - 해당 경로 데이터를 반환
+     */
     @GetMapping("/data")
     public ResponseEntity<?> getPostData(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
-        return ResponseEntity.ok(routeService.getRoute(id)); // 특정 ID에 해당하는 데이터를 반환
+        try {
+            RouteHeadDto route = routeService.getRoute(id);
+            if (route == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 ID의 경로를 찾을 수 없습니다.");
+            }
+            return ResponseEntity.ok(route);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("경로 데이터를 조회 중 문제가 발생했습니다.");
+        }
     }
 
+    /**
+     * 모든 경로 데이터를 조회하는 메서드
+     *
+     * @param email - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
+     * @return ResponseEntity<?> - 모든 경로 데이터를 반환
+     */
     @GetMapping("/datas")
     public ResponseEntity<?> getPostDatas(@AuthenticationPrincipal String email) {
-        return ResponseEntity.ok(routeService.getRoutes()); // 특정 ID에 해당하는 데이터를 반환
+        try {
+            List<RouteHeadDto> routes = routeService.getRoutes();
+            return ResponseEntity.ok(routes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("모든 경로 데이터를 조회 중 문제가 발생했습니다.");
+        }
     }
 
+    /**
+     * 경로 정보를 수정하는 메서드
+     *
+     * @param email    - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
+     * @param routeDTO - 수정할 경로 정보 (RouteHeadDto)
+     * @return ResponseEntity<?> - 수정 결과를 반환
+     */
     @PutMapping("/post")
     public ResponseEntity<?> updateroutehead(@AuthenticationPrincipal String email,
             @RequestBody RouteHeadDto routeDTO) {
-
-        routeService.updateRouteHead(routeDTO);
-
-        return ResponseEntity.ok("success update");
+        try {
+            routeService.updateRouteHead(routeDTO);
+            return ResponseEntity.ok("경로 정보가 성공적으로 업데이트되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("잘못된 경로 데이터입니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("경로 정보 업데이트 중 문제가 발생했습니다.");
+        }
     }
 
+    /**
+     * 경로 좋아요 정보를 수정하는 메서드
+     *
+     * @param email    - 현재 인증된 사용자의 사용자 이메일 (JWT 토큰에서 추출된 값)
+     * @param routeDTO - 좋아요 정보를 포함한 경로 데이터 (RouteHeadDto)
+     * @return ResponseEntity<?> - 수정 결과를 반환
+     */
     @PutMapping("/like")
     public ResponseEntity<?> updatelike(@AuthenticationPrincipal String email,
             @RequestBody RouteHeadDto routeDTO) {
-
-        routeService.updateLike(routeDTO);
-
-        return ResponseEntity.ok("success update");
+        try {
+            routeService.updateLike(routeDTO);
+            return ResponseEntity.ok("좋아요 정보가 성공적으로 업데이트되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("잘못된 좋아요 정보입니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("좋아요 정보 업데이트 중 문제가 발생했습니다.");
+        }
     }
 }

@@ -32,6 +32,8 @@ public class AuthController {
     // application.properties 파일에서 Kakao REST API 키를 주입받음
     @Value("${kakao.rest.api.key}")
     private String KAKAO_REST_API_KEY;
+    @Value("${kakao.redirect.uri}")
+    private String KAKAO_REDIRECT_URI;
 
     // UserService 객체를 주입받아 사용
     private final UserService userService;
@@ -52,8 +54,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserDto userDto) {
         // 로그인 처리 후 JWT 토큰 발급
-        LoginResponse response = userService.authenticate(userDto);
-        return ResponseEntity.ok(response);
+        try {
+            LoginResponse response = userService.authenticate(userDto);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인 실패: 아이디 또는 비밀번호가 잘못되었습니다.");
+        }
     }
 
     /**
@@ -67,9 +73,12 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserDto userDto) {
-        // 회원 가입 처리
-        userService.register(userDto);
-        return ResponseEntity.ok("User registered successfully");
+        try {
+            userService.register(userDto);
+            return ResponseEntity.ok("");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("회원가입 실패: 이미 존재하는 이메일입니다.");
+        }
     }
 
     /**
@@ -84,23 +93,19 @@ public class AuthController {
     public ResponseEntity<?> kakaoLogin(@RequestBody Map<String, String> body) {
         String code = body.get("code");
         try {
-            // 카카오 API를 사용해 액세스 토큰을 받아옴
             String accessToken = getKakaoAccessToken(code);
-            // 액세스 토큰을 사용해 사용자 정보를 받아옴
             Map<String, Object> userInfo = getKakaoUserInfo(accessToken);
             Map<String, Object> kakaoAccount = (Map<String, Object>) userInfo.get("kakao_account");
+
             if (kakaoAccount != null && kakaoAccount.containsKey("email")) {
-                // 사용자 이메일을 통해 로그인 처리
                 LoginResponse response = userService.kakaoLogin((String) kakaoAccount.get("email"));
                 return ResponseEntity.ok(response);
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email not found in Kakao account");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("카카오 계정에 이메일이 없습니다.");
             }
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("JSON 처리 중 오류가 발생했습니다.");
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("로그인 처리 중 오류가 발생했습니다.");
         }
     }
@@ -113,24 +118,26 @@ public class AuthController {
      * @throws JsonProcessingException - JSON 파싱 중 오류 발생 시 예외 처리
      */
     private String getKakaoAccessToken(String code) throws JsonProcessingException {
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", "authorization_code");
-        params.add("client_id", KAKAO_REST_API_KEY);
-        params.add("redirect_uri", "http://localhost:5173/auth/kakao/callback");
-        params.add("code", code);
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("grant_type", "authorization_code");
+            params.add("client_id", KAKAO_REST_API_KEY);
+            params.add("redirect_uri", KAKAO_REDIRECT_URI);
+            params.add("code", code);
 
-        // 카카오 인증 서버로 요청을 보내 액세스 토큰을 받아옴
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://kauth.kakao.com/oauth/token", request, String.class);
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    "https://kauth.kakao.com/oauth/token", request, String.class);
 
-        // 응답에서 액세스 토큰을 추출하여 반환
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readTree(response.getBody()).get("access_token").asText();
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readTree(response.getBody()).get("access_token").asText();
+        } catch (Exception e) {
+            throw new RuntimeException("카카오 서버로부터 액세스 토큰을 가져오는 중 오류가 발생했습니다.");
+        }
     }
 
     /**
@@ -141,35 +148,19 @@ public class AuthController {
      * @throws JsonProcessingException - JSON 파싱 중 오류 발생 시 예외 처리
      */
     private Map<String, Object> getKakaoUserInfo(String accessToken) throws JsonProcessingException {
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken); // 액세스 토큰을 헤더에 추가
-        HttpEntity<?> entity = new HttpEntity<>(headers);
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken);
+            HttpEntity<?> entity = new HttpEntity<>(headers);
 
-        // 카카오 사용자 정보 API를 호출하여 사용자 정보를 받아옴
-        ResponseEntity<String> response = restTemplate.exchange(
-                "https://kapi.kakao.com/v2/user/me", HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    "https://kapi.kakao.com/v2/user/me", HttpMethod.GET, entity, String.class);
 
-        // 응답에서 JSON을 파싱하여 Map으로 반환
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(response.getBody(), Map.class);
-    }
-
-    /**
-     * 카카오 API로부터 받은 사용자 정보에서 이메일을 추출하는 메서드
-     * 
-     * @param userInfo - 사용자 정보가 담긴 Map
-     * @return 사용자의 이메일 또는 null (이메일이 없을 경우)
-     */
-    public String getUserEmail(Map<String, Object> userInfo) {
-        // properties와 kakao_account 정보가 함께 반환됩니다.
-        Map<String, Object> kakaoAccount = (Map<String, Object>) userInfo.get("kakao_account");
-
-        // 이메일이 있는지 확인 후 추출
-        if (kakaoAccount != null && kakaoAccount.containsKey("email")) {
-            return (String) kakaoAccount.get("email");
-        } else {
-            return null; // 이메일이 없을 경우 처리
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(response.getBody(), Map.class);
+        } catch (Exception e) {
+            throw new RuntimeException("카카오 서버로부터 사용자 정보를 가져오는 중 오류가 발생했습니다.");
         }
     }
 
@@ -181,8 +172,12 @@ public class AuthController {
      */
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(@AuthenticationPrincipal String email) {
-        UserDto userDto = userService.getUserProfile(email);
-        return ResponseEntity.ok(userDto);
+        try {
+            UserDto userDto = userService.getUserProfile(email);
+            return ResponseEntity.ok(userDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자의 프로필 정보를 찾을 수 없습니다.");
+        }
     }
 
     /**
@@ -193,8 +188,12 @@ public class AuthController {
      */
     @PostMapping("/profile/update")
     public ResponseEntity<?> updateProfile(@RequestBody UserDto userDto) {
-        userService.updateProfile(userDto);
-        return ResponseEntity.ok("Update successfully");
+        try {
+            userService.updateProfile(userDto);
+            return ResponseEntity.ok("프로필이 성공적으로 업데이트되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("프로필 업데이트 중 오류가 발생했습니다.");
+        }
     }
 
     /**
@@ -205,7 +204,11 @@ public class AuthController {
      */
     @PostMapping("/changePassword")
     public ResponseEntity<?> changePassword(@RequestBody UserDto userDto) {
-        userService.passwordChange(userDto);
-        return ResponseEntity.ok("Update successfully");
+        try {
+            userService.passwordChange(userDto);
+            return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("비밀번호 변경 중 오류가 발생했습니다.");
+        }
     }
 }

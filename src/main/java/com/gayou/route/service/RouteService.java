@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,7 +96,7 @@ public class RouteService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<RouteHead> headList = routeHeadRepository.findAllByUserId(user.getId());
+        List<RouteHead> headList = routeHeadRepository.findAllByUserId(user.getId(), Sort.by("id").descending());
 
         List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
 
@@ -216,7 +217,7 @@ public class RouteService {
 
     @Transactional
     public List<RouteHeadDto> getRoutes() {
-        List<RouteHead> headList = routeHeadRepository.findAll();
+        List<RouteHead> headList = routeHeadRepository.findAll(Sort.by(Sort.Order.desc("id")));
 
         List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
 
