@@ -22,4 +22,5 @@ public class RouteHeadDto {
     private Long totlike;
     private boolean isPublic;
     private RouteBookmarkDto bookmark;
+    private RouteLikeDto like;
 }
