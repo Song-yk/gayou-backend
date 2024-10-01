@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -63,6 +64,12 @@ public class RouteController {
         }
     }
 
+    @DeleteMapping("/locations")
+    public ResponseEntity<?> routeDeleteLocations(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        routeService.routeDeleteLocations(id);
+        return ResponseEntity.ok("");
+    }
+
     /**
      * 특정 경로 데이터를 ID로 조회하는 메서드
      *
@@ -92,9 +99,10 @@ public class RouteController {
     @GetMapping("/datas")
     public ResponseEntity<?> getPostDatas(@AuthenticationPrincipal String email) {
         try {
-            List<RouteHeadDto> routes = routeService.getRoutes();
+            List<RouteHeadDto> routes = routeService.getRoutes(email);
             return ResponseEntity.ok(routes);
         } catch (Exception e) {
+            System.out.println(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("모든 경로 데이터를 조회 중 문제가 발생했습니다.");
         }
     }
@@ -144,6 +152,29 @@ public class RouteController {
             @RequestParam("isPublic") boolean isPublic) {
 
         routeService.updateIsPublic(id, isPublic);
+        return ResponseEntity.ok("");
+    }
+
+    @GetMapping("/bookmark")
+    public ResponseEntity<?> routeGetBookmark(@AuthenticationPrincipal String email) {
+        try {
+            List<RouteHeadDto> routes = routeService.routeGetBookmark(email);
+            return ResponseEntity.ok(routes);
+        } catch (Exception e) {
+            System.out.println(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("모든 경로 데이터를 조회 중 문제가 발생했습니다.");
+        }
+    }
+
+    @PostMapping("/bookmark")
+    public ResponseEntity<?> routePostBookmark(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        routeService.routePostBookmark(email, id);
+        return ResponseEntity.ok("");
+    }
+
+    @DeleteMapping("/bookmark")
+    public ResponseEntity<?> routeDeleteBookmark(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        routeService.routeDeleteBookmark(email, id);
         return ResponseEntity.ok("");
     }
 }

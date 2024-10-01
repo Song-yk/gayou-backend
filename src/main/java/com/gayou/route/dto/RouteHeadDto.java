@@ -3,14 +3,14 @@ package com.gayou.route.dto;
 import java.util.Date;
 import java.util.List;
 
-import com.gayou.auth.model.User;
+import com.gayou.auth.dto.UserDto;
 
 import lombok.Data;
 
 @Data
 public class RouteHeadDto {
     private Long id;
-    private User userId;
+    private UserDto userId;
     private String town;
     private String courseName;
     private Long totDistance;
@@ -21,4 +21,5 @@ public class RouteHeadDto {
     private String content;
     private Long totlike;
     private boolean isPublic;
+    private RouteBookmarkDto bookmark;
 }
