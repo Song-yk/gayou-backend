@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gayou.route.dto.RouteCommentDto;
 import com.gayou.route.dto.RouteHeadDto;
 import com.gayou.route.service.RouteService;
 
@@ -35,6 +36,7 @@ public class RouteController {
     @PostMapping("/locations")
     public ResponseEntity<?> saveCourse(@AuthenticationPrincipal String email,
             @RequestBody RouteHeadDto routeDTO) {
+
         try {
             Long routeHeadId = routeService.saveRoute(routeDTO, email);
             return ResponseEntity.status(HttpStatus.CREATED).body(routeHeadId);
@@ -52,9 +54,9 @@ public class RouteController {
      * @return ResponseEntity<List<RouteHeadDto>> - 사용자가 저장한 경로 목록을 반환
      */
     @GetMapping("/locations")
-    public ResponseEntity<?> getMyCourse(@AuthenticationPrincipal String email) {
+    public ResponseEntity<?> getMyCourse(@AuthenticationPrincipal String email, @RequestParam("flag") boolean flag) {
         try {
-            List<RouteHeadDto> data = routeService.getMyRoute(email);
+            List<RouteHeadDto> data = routeService.getMyRoute(email, flag);
             if (data.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("저장된 경로가 없습니다.");
             }
@@ -80,7 +82,7 @@ public class RouteController {
     @GetMapping("/data")
     public ResponseEntity<?> getPostData(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
         try {
-            RouteHeadDto route = routeService.getRoute(id);
+            RouteHeadDto route = routeService.getRoute(email, id);
             if (route == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 ID의 경로를 찾을 수 없습니다.");
             }
@@ -102,7 +104,6 @@ public class RouteController {
             List<RouteHeadDto> routes = routeService.getRoutes(email);
             return ResponseEntity.ok(routes);
         } catch (Exception e) {
-            System.out.println(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("모든 경로 데이터를 조회 중 문제가 발생했습니다.");
         }
     }
@@ -140,7 +141,6 @@ public class RouteController {
             List<RouteHeadDto> routes = routeService.routeGetLike(email);
             return ResponseEntity.ok(routes);
         } catch (Exception e) {
-            System.out.println(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("모든 경로 데이터를 조회 중 문제가 발생했습니다.");
         }
     }
@@ -171,7 +171,6 @@ public class RouteController {
             List<RouteHeadDto> routes = routeService.routeGetBookmark(email);
             return ResponseEntity.ok(routes);
         } catch (Exception e) {
-            System.out.println(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("모든 경로 데이터를 조회 중 문제가 발생했습니다.");
         }
     }
@@ -187,4 +186,20 @@ public class RouteController {
         routeService.routeDeleteBookmark(email, id);
         return ResponseEntity.ok("");
     }
+
+    @PostMapping("/comment")
+    public ResponseEntity<?> routePostComment(@AuthenticationPrincipal String email, @RequestParam("id") Long id,
+            @RequestBody RouteCommentDto routeCommentDto) {
+
+        RouteCommentDto data = routeService.routePostComment(email, id, routeCommentDto.getComment());
+        return ResponseEntity.ok(data);
+    }
+
+    @DeleteMapping("/comment")
+    public ResponseEntity<?> routeDeleteComment(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+
+        routeService.routeDeleteComment(id);
+        return ResponseEntity.ok("");
+    }
+
 }
