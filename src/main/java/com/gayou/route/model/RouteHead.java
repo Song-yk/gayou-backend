@@ -1,15 +1,19 @@
 package com.gayou.route.model;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.gayou.auth.model.User;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,6 +29,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class RouteHead {
     @Id
@@ -51,6 +56,7 @@ public class RouteHead {
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteItem> data;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private Long totlike = 0L;
@@ -58,4 +64,8 @@ public class RouteHead {
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL)
     private List<RouteHashtags> routeHashtags;
 
+    private boolean isPublic;
+
+    @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RouteBookmark> bookmarks = new ArrayList<>();
 }

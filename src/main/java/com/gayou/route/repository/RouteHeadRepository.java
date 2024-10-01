@@ -14,4 +14,6 @@ public interface RouteHeadRepository extends JpaRepository<RouteHead, Long> {
     List<RouteHead> findAllByUserId(Long userId, Sort sort);
 
     Optional<RouteHead> findById(Long id);
+
+    List<RouteHead> findByIsPublicAndUserIdNot(boolean isPublic, Long userId, Sort sort);
 }
