@@ -134,17 +134,27 @@ public class RouteController {
      * @param routeDTO - 좋아요 정보를 포함한 경로 데이터 (RouteHeadDto)
      * @return ResponseEntity<?> - 수정 결과를 반환
      */
-    @PutMapping("/like")
-    public ResponseEntity<?> updatelike(@AuthenticationPrincipal String email,
-            @RequestBody RouteHeadDto routeDTO) {
+    @GetMapping("/like")
+    public ResponseEntity<?> routeGetLike(@AuthenticationPrincipal String email) {
         try {
-            routeService.updateLike(routeDTO);
-            return ResponseEntity.ok("좋아요 정보가 성공적으로 업데이트되었습니다.");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("잘못된 좋아요 정보입니다.");
+            List<RouteHeadDto> routes = routeService.routeGetLike(email);
+            return ResponseEntity.ok(routes);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("좋아요 정보 업데이트 중 문제가 발생했습니다.");
+            System.out.println(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("모든 경로 데이터를 조회 중 문제가 발생했습니다.");
         }
+    }
+
+    @PostMapping("/like")
+    public ResponseEntity<?> routePostLike(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        routeService.routePostLike(email, id);
+        return ResponseEntity.ok("");
+    }
+
+    @DeleteMapping("/like")
+    public ResponseEntity<?> routeDeleteLike(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        routeService.routeDeleteLike(email, id);
+        return ResponseEntity.ok("");
     }
 
     @PutMapping("/update-public")
