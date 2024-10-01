@@ -52,14 +52,15 @@ public class RouteController {
      * @return ResponseEntity<List<RouteHeadDto>> - 사용자가 저장한 경로 목록을 반환
      */
     @GetMapping("/locations")
-    public ResponseEntity<?> getMyCourse(@AuthenticationPrincipal String email) {
+    public ResponseEntity<?> getMyCourse(@AuthenticationPrincipal String email, @RequestParam("flag") boolean flag) {
         try {
-            List<RouteHeadDto> data = routeService.getMyRoute(email);
+            List<RouteHeadDto> data = routeService.getMyRoute(email, flag);
             if (data.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("저장된 경로가 없습니다.");
             }
             return ResponseEntity.ok(data);
         } catch (Exception e) {
+            System.out.println(e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("경로 목록 조회 중 문제가 발생했습니다.");
         }
     }

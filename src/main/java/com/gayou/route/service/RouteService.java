@@ -106,11 +106,12 @@ public class RouteService {
      * @return 사용자가 저장한 경로 목록 (RouteHeadDto 리스트)
      */
     @Transactional
-    public List<RouteHeadDto> getMyRoute(String email) {
+    public List<RouteHeadDto> getMyRoute(String email, boolean flag) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<RouteHead> headList = routeHeadRepository.findAllByUserId(user.getId(), Sort.by("id").descending());
+        List<RouteHead> headList = routeHeadRepository.findAllByUserIdAndIsPublic(user.getId(), flag,
+                Sort.by("id").descending());
 
         List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
 
