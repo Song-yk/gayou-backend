@@ -23,4 +23,6 @@ public class RouteHeadDto {
     private boolean isPublic;
     private RouteBookmarkDto bookmark;
     private RouteLikeDto like;
+    private List<RouteCommentDto> comments;
+    private int totComment;
 }

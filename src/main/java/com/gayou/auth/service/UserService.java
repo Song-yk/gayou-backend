@@ -240,13 +240,12 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void passwordChange(String email, UserDto userDto) {
 
-        User user = userRepository.findById(userDto.getId())
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         // 현재 비밀번호가 맞는지 확인
-        // if (!passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
-        // throw new IllegalArgumentException("Current password is incorrect");
-        // }
+        if (!passwordEncoder.matches(userDto.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
 
         user.setPassword(passwordEncoder.encode(userDto.getNewPassword()));
         userRepository.save(user);

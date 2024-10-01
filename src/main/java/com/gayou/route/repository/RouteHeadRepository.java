@@ -11,7 +11,7 @@ import com.gayou.route.model.RouteHead;
 
 @Repository
 public interface RouteHeadRepository extends JpaRepository<RouteHead, Long> {
-    List<RouteHead> findAllByUserId(Long userId, Sort sort);
+    List<RouteHead> findAllByUserIdAndIsPublic(Long userId, boolean flag, Sort sort);
 
     Optional<RouteHead> findById(Long id);
 

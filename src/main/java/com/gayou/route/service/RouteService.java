@@ -1,5 +1,6 @@
 package com.gayou.route.service;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -19,19 +20,22 @@ import com.gayou.places.dto.PlacesDto;
 import com.gayou.places.model.Places;
 import com.gayou.places.repository.PlacesRepository;
 import com.gayou.route.dto.RouteBookmarkDto;
-import com.gayou.route.dto.RouteLikeDto;
+import com.gayou.route.dto.RouteCommentDto;
 import com.gayou.route.dto.RouteHeadDto;
 import com.gayou.route.dto.RouteItemDto;
+import com.gayou.route.dto.RouteLikeDto;
 import com.gayou.route.model.RouteBookmark;
-import com.gayou.route.model.RouteLike;
+import com.gayou.route.model.RouteComment;
 import com.gayou.route.model.RouteHashtags;
 import com.gayou.route.model.RouteHead;
 import com.gayou.route.model.RouteItem;
+import com.gayou.route.model.RouteLike;
 import com.gayou.route.repository.RouteBookmarkRepository;
-import com.gayou.route.repository.RouteLikeRepository;
+import com.gayou.route.repository.RouteCommentRepository;
 import com.gayou.route.repository.RouteHashtagsRepository;
 import com.gayou.route.repository.RouteHeadRepository;
 import com.gayou.route.repository.RouteItemRepository;
+import com.gayou.route.repository.RouteLikeRepository;
 
 @Service
 public class RouteService {
@@ -42,13 +46,14 @@ public class RouteService {
     private final HashtagRepository hashtagRepository;
     private final RouteHashtagsRepository routeHashtagsRepository;
     private final RouteBookmarkRepository routeBookmarkRepository;
-    private final RouteLikeRepository routeLikeRepository; // RouteLikeRepository 추가
+    private final RouteLikeRepository routeLikeRepository;
+    private final RouteCommentRepository routeCommentRepository;
     private final UserRepository userRepository;
 
     public RouteService(RouteHeadRepository routeHeadRepository, RouteItemRepository routeItemRepository,
             PlacesRepository placesRepository, RouteHashtagsRepository routeHashtagsRepository,
             HashtagRepository hashtagRepository, RouteBookmarkRepository routeBookmarkRepository,
-            RouteLikeRepository routeLikeRepository, // 생성자에 RouteLikeRepository 추가
+            RouteLikeRepository routeLikeRepository, RouteCommentRepository routeCommentRepository,
             UserRepository userRepository) {
         this.routeHeadRepository = routeHeadRepository;
         this.routeItemRepository = routeItemRepository;
@@ -56,7 +61,8 @@ public class RouteService {
         this.hashtagRepository = hashtagRepository;
         this.routeHashtagsRepository = routeHashtagsRepository;
         this.routeBookmarkRepository = routeBookmarkRepository;
-        this.routeLikeRepository = routeLikeRepository; // 필드에 주입
+        this.routeLikeRepository = routeLikeRepository;
+        this.routeCommentRepository = routeCommentRepository;
         this.userRepository = userRepository;
     }
 
@@ -106,11 +112,12 @@ public class RouteService {
      * @return 사용자가 저장한 경로 목록 (RouteHeadDto 리스트)
      */
     @Transactional
-    public List<RouteHeadDto> getMyRoute(String email) {
+    public List<RouteHeadDto> getMyRoute(String email, boolean flag) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<RouteHead> headList = routeHeadRepository.findAllByUserId(user.getId(), Sort.by("id").descending());
+        List<RouteHead> headList = routeHeadRepository.findAllByUserIdAndIsPublic(user.getId(), flag,
+                Sort.by("id").descending());
 
         List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
 
@@ -180,9 +187,10 @@ public class RouteService {
     }
 
     @Transactional
-    public RouteHeadDto getRoute(Long id) {
+    public RouteHeadDto getRoute(String email, Long id) {
         RouteHead head = routeHeadRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("route not found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("user not found"));
 
         RouteHeadDto routeHeadDto = new RouteHeadDto();
         routeHeadDto.setId(head.getId());
@@ -195,12 +203,51 @@ public class RouteService {
         routeHeadDto.setUpdateDate(head.getUpdateDate());
         routeHeadDto.setPublic(head.isPublic());
 
+        UserDto userIdDto = new UserDto();
+        userIdDto.setId(user.getId());
+        userIdDto.setProfilePicture(user.getProfilePicture());
+        routeHeadDto.setUserId(userIdDto);
+
+        RouteBookmark routeBookmark = routeBookmarkRepository.findByRouteHeadAndUser(head, user);
+        RouteBookmarkDto routeBookmarkDto = new RouteBookmarkDto();
+        if (routeBookmark != null) {
+            routeBookmarkDto.setId(routeBookmark.getId());
+        }
+        routeHeadDto.setBookmark(routeBookmarkDto);
+
+        RouteLike routeLike = routeLikeRepository.findByRouteHeadAndUser(head, user);
+        RouteLikeDto routeLikeDto = new RouteLikeDto();
+        if (routeLike != null) {
+            routeLikeDto.setId(routeLike.getId());
+        }
+        routeHeadDto.setLike(routeLikeDto);
+
         List<String> hashtagList = new ArrayList<>();
         for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
             hashtagList.add(routeHashtag.getHashtag().getTagName());
         }
 
         routeHeadDto.setTag(hashtagList);
+
+        List<RouteComment> routeComments = routeCommentRepository.findAllByRouteHead(head,
+                Sort.by("createDate").descending());
+        List<RouteCommentDto> routeCommentDtos = new ArrayList<>();
+        for (RouteComment routeComment : routeComments) {
+            RouteCommentDto routeCommentDto = new RouteCommentDto();
+            routeCommentDto.setId(routeComment.getId());
+            routeCommentDto.setComment(routeComment.getComment());
+            routeCommentDto.setCreateDate(routeComment.getCreateDate());
+            User userComment = routeComment.getUser();
+            UserDto userDto = new UserDto();
+            userDto.setId(userComment.getId());
+            userDto.setProfilePicture(userComment.getProfilePicture());
+            userDto.setName(userComment.getName());
+            routeCommentDto.setUser(userDto);
+            routeCommentDtos.add(routeCommentDto);
+        }
+
+        routeHeadDto.setComments(routeCommentDtos);
+        routeHeadDto.setTotComment(routeComments.size());
 
         List<RouteItemDto> dtoItemList = new ArrayList<>();
         List<RouteItem> routeItemList = head.getData();
@@ -587,13 +634,42 @@ public class RouteService {
 
     @Transactional
     public void routeDeleteLike(String email, Long id) {
-        RouteHead routeHead = routeHeadRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Route not found"));
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        RouteHead routeHead = routeHeadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
         RouteLike routeLike = routeLikeRepository.findByRouteHeadAndUser(routeHead, user);
 
         routeLikeRepository.delete(routeLike);
     }
 
+    @Transactional
+    public RouteCommentDto routePostComment(String email, Long id, String comment) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        RouteHead routeHead = routeHeadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+
+        RouteComment routeComment = new RouteComment();
+        routeComment.setUser(user);
+        routeComment.setRouteHead(routeHead);
+        routeComment.setComment(comment);
+        RouteComment saveData = routeCommentRepository.save(routeComment);
+        RouteCommentDto routeCommentDto = new RouteCommentDto();
+        routeCommentDto.setId(saveData.getId());
+        routeCommentDto.setComment(saveData.getComment());
+        routeCommentDto.setCreateDate(saveData.getCreateDate());
+        User saveUser = saveData.getUser();
+        UserDto saveUserDto = new UserDto();
+        saveUserDto.setId(saveUser.getId());
+        saveUserDto.setName(saveUser.getName());
+        saveUserDto.setProfilePicture(saveUser.getProfilePicture());
+        routeCommentDto.setUser(saveUserDto);
+        return routeCommentDto;
+    }
+
+    @Transactional
+    public void routeDeleteComment(Long id) {
+        routeCommentRepository.deleteById(id);
+    }
 }
