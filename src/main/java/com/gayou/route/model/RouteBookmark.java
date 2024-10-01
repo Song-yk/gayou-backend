@@ -4,10 +4,12 @@ import java.util.Date;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.gayou.hashtag.model.Hashtag;
+import com.gayou.auth.model.User;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,9 +22,9 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "route_hashtags")
-public class RouteHashtags {
-
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "route_bookmark")
+public class RouteBookmark {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,10 +34,8 @@ public class RouteHashtags {
     private RouteHead routeHead;
 
     @ManyToOne
-    @JoinColumn(name = "hashtag_id", nullable = false)
-    private Hashtag hashtag;
-
-    private int orderNumber;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @CreatedDate
     private Date createDate;
