@@ -19,13 +19,16 @@ import com.gayou.places.dto.PlacesDto;
 import com.gayou.places.model.Places;
 import com.gayou.places.repository.PlacesRepository;
 import com.gayou.route.dto.RouteBookmarkDto;
+import com.gayou.route.dto.RouteLikeDto;
 import com.gayou.route.dto.RouteHeadDto;
 import com.gayou.route.dto.RouteItemDto;
 import com.gayou.route.model.RouteBookmark;
+import com.gayou.route.model.RouteLike;
 import com.gayou.route.model.RouteHashtags;
 import com.gayou.route.model.RouteHead;
 import com.gayou.route.model.RouteItem;
 import com.gayou.route.repository.RouteBookmarkRepository;
+import com.gayou.route.repository.RouteLikeRepository;
 import com.gayou.route.repository.RouteHashtagsRepository;
 import com.gayou.route.repository.RouteHeadRepository;
 import com.gayou.route.repository.RouteItemRepository;
@@ -39,11 +42,13 @@ public class RouteService {
     private final HashtagRepository hashtagRepository;
     private final RouteHashtagsRepository routeHashtagsRepository;
     private final RouteBookmarkRepository routeBookmarkRepository;
+    private final RouteLikeRepository routeLikeRepository; // RouteLikeRepository 추가
     private final UserRepository userRepository;
 
     public RouteService(RouteHeadRepository routeHeadRepository, RouteItemRepository routeItemRepository,
             PlacesRepository placesRepository, RouteHashtagsRepository routeHashtagsRepository,
             HashtagRepository hashtagRepository, RouteBookmarkRepository routeBookmarkRepository,
+            RouteLikeRepository routeLikeRepository, // 생성자에 RouteLikeRepository 추가
             UserRepository userRepository) {
         this.routeHeadRepository = routeHeadRepository;
         this.routeItemRepository = routeItemRepository;
@@ -51,6 +56,7 @@ public class RouteService {
         this.hashtagRepository = hashtagRepository;
         this.routeHashtagsRepository = routeHashtagsRepository;
         this.routeBookmarkRepository = routeBookmarkRepository;
+        this.routeLikeRepository = routeLikeRepository; // 필드에 주입
         this.userRepository = userRepository;
     }
 
@@ -258,12 +264,17 @@ public class RouteService {
             routeHeadDto.setPublic(head.isPublic());
             RouteBookmark routeBookmark = routeBookmarkRepository.findByRouteHeadAndUser(head, user);
             RouteBookmarkDto routeBookmarkDto = new RouteBookmarkDto();
-
             if (routeBookmark != null) {
                 routeBookmarkDto.setId(routeBookmark.getId());
             }
-
             routeHeadDto.setBookmark(routeBookmarkDto);
+
+            RouteLike routeLike = routeLikeRepository.findByRouteHeadAndUser(head, user);
+            RouteLikeDto routeLikeDto = new RouteLikeDto();
+            if (routeLike != null) {
+                routeLikeDto.setId(routeLike.getId());
+            }
+            routeHeadDto.setLike(routeLikeDto);
 
             List<String> hashtagList = new ArrayList<>();
             for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
@@ -474,4 +485,115 @@ public class RouteService {
 
         routeBookmarkRepository.delete(routebookmark);
     }
+
+    @Transactional
+    public List<RouteHeadDto> routeGetLike(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        List<RouteLike> likeList = routeLikeRepository.findAllByUser(user);
+        List<RouteHeadDto> headList = new ArrayList<>();
+
+        for (RouteLike like : likeList) {
+            RouteHead head = like.getRouteHead();
+            RouteHeadDto headDto = new RouteHeadDto();
+            headDto.setId(head.getId());
+            headDto.setTown(head.getTown());
+            headDto.setCourseName(head.getCourseName());
+            headDto.setTotDistance(head.getTotDistance());
+            headDto.setContent(head.getContent());
+            headDto.setTotlike(head.getTotlike());
+            headDto.setCreateDate(head.getCreateDate());
+            headDto.setUpdateDate(head.getUpdateDate());
+
+            // Route 작성자 정보 설정
+            User routeUser = head.getUser();
+            UserDto routeUserDto = new UserDto();
+            routeUserDto.setId(routeUser.getId());
+            routeUserDto.setProfilePicture(routeUser.getProfilePicture());
+            routeUserDto.setName(routeUser.getName());
+            headDto.setUserId(routeUserDto);
+            headDto.setPublic(head.isPublic());
+
+            // 좋아요 상태 설정
+            RouteLike routeLike = routeLikeRepository.findByRouteHeadAndUser(head, user);
+            RouteLikeDto routeLikeDto = new RouteLikeDto();
+
+            if (routeLike != null) {
+                routeLikeDto.setId(routeLike.getId());
+            }
+
+            headDto.setLike(routeLikeDto);
+
+            // 해시태그 리스트 설정
+            List<String> hashtagList = new ArrayList<>();
+            for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
+                hashtagList.add(routeHashtag.getHashtag().getTagName());
+            }
+
+            headDto.setTag(hashtagList);
+
+            // 경로 아이템 설정
+            List<RouteItemDto> dtoItemList = new ArrayList<>();
+            List<RouteItem> routeItemList = head.getData();
+
+            for (RouteItem item : routeItemList) {
+                RouteItemDto routeItemDto = new RouteItemDto();
+                routeItemDto.setId(item.getId());
+
+                Places places = item.getPlace();
+                PlacesDto placesDto = new PlacesDto(places.getContentid());
+                placesDto.setTitle(places.getTitle());
+                placesDto.setAddr1(places.getAddr1());
+                placesDto.setAddr2(places.getAddr2());
+                placesDto.setAreacode(places.getAreacode());
+                placesDto.setBooktour(places.getBooktour());
+                placesDto.setCat1(places.getCat1());
+                placesDto.setCat2(places.getCat2());
+                placesDto.setCat3(places.getCat3());
+                placesDto.setContenttypeid(places.getContenttypeid());
+                placesDto.setCreatedtime(places.getCreatedtime());
+                placesDto.setFirstimage(places.getFirstimage());
+                placesDto.setFirstimage2(places.getFirstimage2());
+                placesDto.setMapx(places.getMapx());
+                placesDto.setMapy(places.getMapy());
+                placesDto.setModifiedtime(places.getModifiedtime());
+                placesDto.setTel(places.getTel());
+                placesDto.setOverview(places.getOverview());
+                placesDto.setLastUpdated(places.getLastUpdated());
+
+                routeItemDto.setContentid(placesDto);
+                dtoItemList.add(routeItemDto);
+            }
+
+            headDto.setData(dtoItemList);
+            headList.add(headDto);
+        }
+
+        return headList;
+    }
+
+    @Transactional
+    public void routePostLike(String email, Long id) {
+        RouteHead routeHead = routeHeadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        RouteLike routeLike = new RouteLike();
+        routeLike.setRouteHead(routeHead);
+        routeLike.setUser(user);
+        routeLikeRepository.save(routeLike);
+    }
+
+    @Transactional
+    public void routeDeleteLike(String email, Long id) {
+        RouteHead routeHead = routeHeadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        RouteLike routeLike = routeLikeRepository.findByRouteHeadAndUser(routeHead, user);
+
+        routeLikeRepository.delete(routeLike);
+    }
+
 }
