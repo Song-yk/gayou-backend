@@ -68,4 +68,8 @@ public class RouteHead {
 
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteBookmark> bookmarks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RouteLike> likes = new ArrayList<>();
+
 }
