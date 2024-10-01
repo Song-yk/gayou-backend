@@ -63,6 +63,7 @@ public class RouteService {
         routeHead.setCreateDate(new Date());
         routeHead.setTown(routeDTO.getTown());
         routeHead.setTotDistance(routeDTO.getTotDistance());
+        routeHead.setPublic(false);
 
         RouteHead savedRouteHead = routeHeadRepository.save(routeHead);
 
@@ -110,6 +111,7 @@ public class RouteService {
             routeHeadDto.setTotlike(head.getTotlike());
             routeHeadDto.setCreateDate(head.getCreateDate());
             routeHeadDto.setUpdateDate(head.getUpdateDate());
+            routeHeadDto.setPublic(head.isPublic());
 
             List<String> hashtagList = new ArrayList<>();
             for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
@@ -171,6 +173,7 @@ public class RouteService {
         routeHeadDto.setTotlike(head.getTotlike());
         routeHeadDto.setCreateDate(head.getCreateDate());
         routeHeadDto.setUpdateDate(head.getUpdateDate());
+        routeHeadDto.setPublic(head.isPublic());
 
         List<String> hashtagList = new ArrayList<>();
         for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
@@ -217,7 +220,7 @@ public class RouteService {
 
     @Transactional
     public List<RouteHeadDto> getRoutes() {
-        List<RouteHead> headList = routeHeadRepository.findAll(Sort.by(Sort.Order.desc("id")));
+        List<RouteHead> headList = routeHeadRepository.findByIsPublic(true, Sort.by(Sort.Order.desc("createDate")));
 
         List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
 
@@ -232,6 +235,7 @@ public class RouteService {
             routeHeadDto.setCreateDate(head.getCreateDate());
             routeHeadDto.setUpdateDate(head.getUpdateDate());
             routeHeadDto.setUserId(head.getUser());
+            routeHeadDto.setPublic(head.isPublic());
 
             List<String> hashtagList = new ArrayList<>();
             for (RouteHashtags routeHashtag : head.getRouteHashtags()) {
@@ -281,26 +285,21 @@ public class RouteService {
 
     @Transactional
     public void updateRouteHead(RouteHeadDto routeHeadDto) {
-        // 1. RouteHead 엔티티를 가져옴
         RouteHead routeHead = routeHeadRepository.findById(routeHeadDto.getId())
                 .orElseThrow(() -> new RuntimeException("Route not found"));
 
-        // 2. 기본 정보 업데이트
         routeHead.setCourseName(routeHeadDto.getCourseName());
         routeHead.setContent(routeHeadDto.getContent());
+        routeHead.setPublic(true);
 
-        // 3. 해시태그가 null인 경우 빈 리스트로 처리
         List<String> tagList = routeHeadDto.getTag() != null ? routeHeadDto.getTag() : Collections.emptyList();
 
-        // 4. 기존 해시태그 조회
         List<String> existingTags = hashtagRepository.findExistingTags(tagList);
 
-        // 5. 중복되지 않은 새로운 태그 필터링
         List<String> nonDuplicateTags = tagList.stream()
                 .filter(tag -> !existingTags.contains(tag))
                 .collect(Collectors.toList());
 
-        // 6. 새로운 태그가 있으면 저장
         List<Hashtag> newHashtags = nonDuplicateTags.stream()
                 .map(tag -> {
                     Hashtag hashtag = new Hashtag();
@@ -310,7 +309,6 @@ public class RouteService {
 
         hashtagRepository.saveAll(newHashtags);
 
-        // 7. RouteHashtags 설정 (기존 해시태그 + 새로운 해시태그)
         List<Hashtag> allTags = hashtagRepository.findByTagNameIn(tagList);
         List<RouteHashtags> routeHashtags = allTags.stream()
                 .map(hashtag -> {
@@ -320,17 +318,15 @@ public class RouteService {
                     return routeHashtag;
                 }).collect(Collectors.toList());
 
-        // 8. 해당 routeHeadId에 대한 기존 RouteHashtags 삭제
         routeHashtagsRepository.deleteByRouteHeadId(routeHead.getId());
 
-        // 9. 새로운 RouteHashtags 삽입
         routeHashtagsRepository.saveAll(routeHashtags);
 
-        // 10. RouteHead 업데이트 저장
-        routeHead.setRouteHashtags(routeHashtags); // 연관 관계 설정
+        routeHead.setRouteHashtags(routeHashtags);
         routeHeadRepository.save(routeHead);
     }
 
+    @Transactional
     public void updateLike(RouteHeadDto routeHeadDto) {
         RouteHead routeHead = routeHeadRepository.findById(routeHeadDto.getId())
                 .orElseThrow(() -> new RuntimeException("route not found"));
@@ -338,5 +334,12 @@ public class RouteService {
         routeHead.setTotlike(routeHeadDto.getTotlike());
         routeHeadRepository.save(routeHead);
 
+    }
+
+    public void updateIsPublic(Long id, boolean isPublic) {
+        RouteHead routeHead = routeHeadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("route not found"));
+        routeHead.setPublic(isPublic);
+        routeHeadRepository.save(routeHead);
     }
 }

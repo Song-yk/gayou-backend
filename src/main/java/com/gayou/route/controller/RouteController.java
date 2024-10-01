@@ -138,4 +138,12 @@ public class RouteController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("좋아요 정보 업데이트 중 문제가 발생했습니다.");
         }
     }
+
+    @PutMapping("/update-public")
+    public ResponseEntity<?> updateIsPublic(@AuthenticationPrincipal String email, @RequestParam("id") Long id,
+            @RequestParam("isPublic") boolean isPublic) {
+
+        routeService.updateIsPublic(id, isPublic);
+        return ResponseEntity.ok("");
+    }
 }

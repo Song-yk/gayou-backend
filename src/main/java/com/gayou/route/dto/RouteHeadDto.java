@@ -20,4 +20,5 @@ public class RouteHeadDto {
     private List<String> tag;
     private String content;
     private Long totlike;
+    private boolean isPublic;
 }

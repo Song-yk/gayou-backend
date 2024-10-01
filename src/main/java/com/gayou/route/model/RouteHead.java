@@ -9,6 +9,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import com.gayou.auth.model.User;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -51,6 +52,7 @@ public class RouteHead {
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RouteItem> data;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     private Long totlike = 0L;
@@ -58,4 +60,5 @@ public class RouteHead {
     @OneToMany(mappedBy = "routeHead", cascade = CascadeType.ALL)
     private List<RouteHashtags> routeHashtags;
 
+    private boolean isPublic;
 }
