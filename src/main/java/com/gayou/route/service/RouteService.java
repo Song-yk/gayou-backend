@@ -1,6 +1,5 @@
 package com.gayou.route.service;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -116,8 +115,14 @@ public class RouteService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<RouteHead> headList = routeHeadRepository.findAllByUserIdAndIsPublic(user.getId(), flag,
-                Sort.by("id").descending());
+        List<RouteHead> headList = new ArrayList<>();
+        if (flag) {
+            headList = routeHeadRepository.findAllByUserIdAndCourseNameIsNotNull(user.getId(),
+                    Sort.by("id").descending());
+        } else {
+            headList = routeHeadRepository.findAllByUserIdAndCourseNameIsNull(user.getId(),
+                    Sort.by("id").descending());
+        }
 
         List<RouteHeadDto> routeHeadDtoList = new ArrayList<>();
 
