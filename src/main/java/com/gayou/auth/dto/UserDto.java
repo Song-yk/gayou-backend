@@ -15,7 +15,7 @@ public class UserDto {
 	private String email;
 	private String phoneNumber;
 	private Date birthday;
-	private String gender;
+	private Boolean isGender;
 	private Boolean isLocal;
 	private String profilePicture;
 	private String description;

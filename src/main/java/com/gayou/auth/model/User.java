@@ -33,7 +33,7 @@ public class User {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date birthday;
 
-    private String gender;
+    private boolean isGender;
 
     private boolean isLocal;
 
