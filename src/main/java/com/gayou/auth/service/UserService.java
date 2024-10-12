@@ -104,6 +104,9 @@ public class UserService implements UserDetailsService {
         newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
         newUser.setPhoneNumber(userDto.getPhoneNumber());
         newUser.setBirthday(userDto.getBirthday());
+        newUser.setGender(userDto.getIsGender());
+        newUser.setLocal(userDto.getIsLocal());
+        newUser.setProfilePicture(userDto.getProfilePicture());
         newUser.setLastLoginTime(new Date());
         newUser.setStatus(AccountStatus.ACTIVE);
 
@@ -194,7 +197,7 @@ public class UserService implements UserDetailsService {
         userDto.setName(user.getName());
         userDto.setPhoneNumber(user.getPhoneNumber());
         userDto.setBirthday(user.getBirthday());
-        userDto.setGender(user.getGender());
+        userDto.setIsGender(user.isGender());
         userDto.setIsLocal(user.isLocal());
         userDto.setProfilePicture(user.getProfilePicture());
         userDto.setDescription(user.getDescription());
@@ -223,7 +226,7 @@ public class UserService implements UserDetailsService {
         }
 
         existingUser.setName(userDto.getName());
-        existingUser.setGender(userDto.getGender());
+        existingUser.setGender(userDto.getIsGender());
         existingUser.setLocal(userDto.getIsLocal());
         existingUser.setProfilePicture(userDto.getProfilePicture());
         existingUser.setDescription(userDto.getDescription());
