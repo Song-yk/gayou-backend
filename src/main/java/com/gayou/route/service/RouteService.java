@@ -649,6 +649,26 @@ public class RouteService {
     }
 
     @Transactional
+    public void routePutLike(String email, long id) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        RouteHead routeHead = routeHeadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+        routeHead.setTotlike(routeHead.getTotlike() - 1);
+        routeHeadRepository.save(routeHead);
+    }
+
+    @Transactional
+    public void routePutLikee(String email, long id) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        RouteHead routeHead = routeHeadRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Route not found"));
+        routeHead.setTotlike(routeHead.getTotlike() + 1);
+        routeHeadRepository.save(routeHead);
+    }
+
+    @Transactional
     public RouteCommentDto routePostComment(String email, Long id, String comment) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));

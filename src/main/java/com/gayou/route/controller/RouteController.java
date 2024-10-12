@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.gayou.route.dto.RouteCommentDto;
 import com.gayou.route.dto.RouteHeadDto;
 import com.gayou.route.service.RouteService;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/route")
@@ -154,6 +155,22 @@ public class RouteController {
     @DeleteMapping("/like")
     public ResponseEntity<?> routeDeleteLike(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
         routeService.routeDeleteLike(email, id);
+        return ResponseEntity.ok("");
+    }
+
+    @PutMapping("/like")
+
+    public ResponseEntity<?> routePutLike(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        routeService.routePutLike(email, id);
+
+        return ResponseEntity.ok("");
+    }
+
+    @PutMapping("/likes")
+
+    public ResponseEntity<?> routePutLikee(@AuthenticationPrincipal String email, @RequestParam("id") Long id) {
+        routeService.routePutLikee(email, id);
+
         return ResponseEntity.ok("");
     }
 
